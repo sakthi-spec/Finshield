@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>FinShield — Security Intelligence</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+}
+
+:root{
+    --bg:#02080d;
+    --panel:#06131b;
+    --panel2:#091b23;
+    --green:#19f2a0;
+    --cyan:#35dfff;
+    --text:#eefcf8;
+    --muted:#718a92;
+    --line:rgba(80,230,190,.13);
+}
+
+body{
+    min-height:100vh;
+    background:
+        radial-gradient(circle at 50% 45%,rgba(0,255,170,.075),transparent 25%),
+        radial-gradient(circle at 90% 0%,rgba(0,190,255,.06),transparent 30%),
+        #02080d;
+    color:var(--text);
+    overflow-x:hidden;
+}
+
+/* BACKGROUND */
+
+.grid{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    opacity:.12;
+    background-image:
+        linear-gradient(rgba(50,220,190,.12) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(50,220,190,.12) 1px,transparent 1px);
+    background-size:55px 55px;
+    mask-image:linear-gradient(to bottom,black,transparent);
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    bottom:0;
+    width:82px;
+    background:rgba(2,10,16,.92);
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:22px 0;
+    z-index:10;
+}
+
+.logo{
+    width:45px;
+    height:45px;
+    border-radius:14px;
+    border:1px solid rgba(25,242,160,.4);
+    display:grid;
+    place-items:center;
+    background:rgba(25,242,160,.06);
+    box-shadow:0 0 30px rgba(25,242,160,.1);
+}
+
+.logo svg{
+    width:27px;
+    stroke:var(--green);
+}
+
+.side-nav{
+    margin-top:55px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.nav{
+    width:45px;
+    height:45px;
+    border:0;
+    border-radius:13px;
+    background:transparent;
+    display:grid;
+    place-items:center;
+    cursor:pointer;
+    color:#68818a;
+    transition:.25s;
+}
+
+.nav svg{
+    width:21px;
+}
+
+.nav:hover,
+.nav.active{
+    color:var(--green);
+    background:rgba(25,242,160,.09);
+    box-shadow:
+        0 0 25px rgba(25,242,160,.08),
+        inset 0 0 0 1px rgba(25,242,160,.15);
+}
+
+.sidebar-bottom{
+    margin-top:auto;
+    color:#506a73;
+    font-size:8px;
+    writing-mode:vertical-rl;
+    letter-spacing:3px;
+}
+
+/* MAIN */
+
+main{
+    margin-left:82px;
+    min-height:100vh;
+    padding:18px 30px;
+}
+
+/* TOP */
+
+.top{
+    height:52px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+}
+
+.system{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#7e969d;
+    font-size:11px;
+    letter-spacing:1px;
+}
+
+.system-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 15px var(--green);
+}
+
+.top-right{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}
+
+.search{
+    width:240px;
+    height:35px;
+    border:1px solid var(--line);
+    border-radius:25px;
+    display:flex;
+    align-items:center;
+    padding:0 13px;
+    gap:8px;
+}
+
+.search svg{
+    width:16px;
+    stroke:#718890;
+}
+
+.search input{
+    width:100%;
+    background:none;
+    border:0;
+    outline:0;
+    color:white;
+    font-size:11px;
+}
+
+.avatar{
+    width:33px;
+    height:33px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:#102d38;
+    font-size:11px;
+}
+
+/* TITLE */
+
+.title{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    padding:27px 8px 15px;
+}
+
+.title h1{
+    font-size:37px;
+    letter-spacing:-2px;
+}
+
+.title h1 span{
+    color:var(--green);
+}
+
+.title p{
+    color:#607a82;
+    font-size:10px;
+    letter-spacing:3px;
+    margin-top:7px;
+}
+
+.date{
+    color:#5d7881;
+    font-size:10px;
+}
+
+/* CORE LAYOUT */
+
+.workspace{
+    display:grid;
+    grid-template-columns:1fr 330px;
+    gap:20px;
+}
+
+/* SECURITY CORE */
+
+.core-panel{
+    position:relative;
+    height:560px;
+    border:1px solid var(--line);
+    border-radius:22px;
+    background:
+        radial-gradient(
+            circle at 50% 48%,
+            rgba(25,242,160,.07),
+            transparent 34%
+        ),
+        rgba(4,18,25,.82);
+    overflow:hidden;
+}
+
+/* RADAR */
+
+.radar{
+    position:absolute;
+    width:500px;
+    height:500px;
+    left:50%;
+    top:48%;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    border:1px solid rgba(25,242,160,.11);
+}
+
+.radar:before,
+.radar:after{
+    content:"";
+    position:absolute;
+    inset:60px;
+    border:1px solid rgba(25,242,160,.09);
+    border-radius:50%;
+}
+
+.radar:after{
+    inset:130px;
+}
+
+.radar-line{
+    position:absolute;
+    width:50%;
+    height:1px;
+    left:50%;
+    top:50%;
+    transform-origin:left;
+    background:linear-gradient(
+        90deg,
+        rgba(25,242,160,.55),
+        transparent
+    );
+    animation:sweep 4s linear infinite;
+}
+
+@keyframes sweep{
+    from{transform:rotate(0deg)}
+    to{transform:rotate(360deg)}
+}
+
+.cross-x{
+    position:absolute;
+    width:100%;
+    height:1px;
+    top:50%;
+    background:rgba(25,242,160,.06);
+}
+
+.cross-y{
+    position:absolute;
+    width:1px;
+    height:100%;
+    left:50%;
+    background:rgba(25,242,160,.06);
+}
+
+/* NODES */
+
+.node{
+    position:absolute;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 18px var(--green);
+    animation:blink 2s infinite alternate;
+}
+
+.n1{top:25%;left:35%}
+.n2{top:31%;right:25%}
+.n3{bottom:29%;left:25%}
+.n4{bottom:22%;right:30%}
+.n5{top:43%;left:17%}
+.n6{top:65%;right:16%}
+
+@keyframes blink{
+    from{opacity:.3}
+    to{opacity:1}
+}
+
+/* CORE */
+
+.security-core{
+    position:absolute;
+    left:50%;
+    top:48%;
+    transform:translate(-50%,-50%);
+    width:185px;
+    height:185px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:
+        radial-gradient(
+            circle,
+            rgba(25,242,160,.18),
+            rgba(3,17,23,.95) 62%
+        );
+    border:1px solid rgba(25,242,160,.5);
+    box-shadow:
+        0 0 50px rgba(25,242,160,.12),
+        inset 0 0 40px rgba(25,242,160,.07);
+}
+
+.core-inner{
+    width:145px;
+    height:145px;
+    border-radius:50%;
+    border:1px dashed rgba(25,242,160,.4);
+    display:grid;
+    place-items:center;
+}
+
+.core-icon svg{
+    width:55px;
+    stroke:var(--green);
+    filter:drop-shadow(0 0 10px var(--green));
+}
+
+.core-label{
+    position:absolute;
+    bottom:27px;
+    text-align:center;
+    font-size:9px;
+    letter-spacing:3px;
+    color:#719098;
+}
+
+.core-label strong{
+    display:block;
+    color:var(--green);
+    margin-top:4px;
+    font-size:10px;
+}
+
+/* CORE TOP */
+
+.core-top{
+    position:absolute;
+    top:20px;
+    left:20px;
+    right:20px;
+    display:flex;
+    justify-content:space-between;
+}
+
+.tag{
+    border:1px solid var(--line);
+    padding:6px 10px;
+    border-radius:20px;
+    color:#668189;
+    font-size:9px;
+    letter-spacing:1px;
+}
+
+.live{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    color:var(--green);
+    font-size:9px;
+}
+
+.live i{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 12px var(--green);
+}
+
+/* UPLOAD */
+
+.upload-trigger{
+    position:absolute;
+    left:50%;
+    bottom:35px;
+    transform:translateX(-50%);
+    width:280px;
+    height:53px;
+    border:1px solid rgba(25,242,160,.3);
+    border-radius:12px;
+    background:rgba(25,242,160,.07);
+    color:white;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    transition:.3s;
+}
+
+.upload-trigger:hover{
+    background:rgba(25,242,160,.14);
+    box-shadow:0 0 30px rgba(25,242,160,.1);
+}
+
+.upload-trigger svg{
+    width:20px;
+    stroke:var(--green);
+}
+
+#file{
+    display:none;
+}
+
+.file-name{
+    position:absolute;
+    bottom:17px;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--green);
+    font-size:9px;
+}
+
+/* RIGHT PANEL */
+
+.side-panel{
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+/* RISK */
+
+.risk-card{
+    height:270px;
+    border:1px solid var(--line);
+    border-radius:18px;
+    background:var(--panel);
+    padding:20px;
+}
+
+.card-heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:#a5b8bd;
+    font-size:11px;
+    letter-spacing:1px;
+}
+
+.card-heading span{
+    color:#55717a;
+    font-size:9px;
+}
+
+/* SCORE */
+
+.score{
+    height:155px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.score-ring{
+    width:135px;
+    height:135px;
+    border-radius:50%;
+    background:
+        conic-gradient(
+            var(--green) 18%,
+            #122f39 18%
+        );
+    display:grid;
+    place-items:center;
+}
+
+.score-inner{
+    width:108px;
+    height:108px;
+    border-radius:50%;
+    background:#06131b;
+    display:grid;
+    place-items:center;
+    text-align:center;
+}
+
+.score-number{
+    font-size:33px;
+    font-weight:800;
+}
+
+.score-number small{
+    display:block;
+    color:#5d7881;
+    font-size:9px;
+}
+
+.low{
+    color:var(--green);
+    text-align:center;
+    font-size:10px;
+}
+
+/* SIGNALS */
+
+.signals{
+    flex:1;
+    border:1px solid var(--line);
+    border-radius:18px;
+    background:var(--panel);
+    padding:20px;
+}
+
+.signal{
+    display:flex;
+    align-items:center;
+    padding:14px 0;
+    border-bottom:1px solid rgba(255,255,255,.05);
+    gap:11px;
+}
+
+.signal:last-child{
+    border-bottom:0;
+}
+
+.signal-icon{
+    width:31px;
+    height:31px;
+    border-radius:9px;
+    background:rgba(25,242,160,.07);
+    display:grid;
+    place-items:center;
+}
+
+.signal-icon svg{
+    width:17px;
+    stroke:var(--green);
+}
+
+.signal-text{
+    flex:1;
+}
+
+.signal-text small{
+    display:block;
+    color:#526e77;
+    font-size:8px;
+}
+
+.signal-text span{
+    font-size:11px;
+}
+
+.ok{
+    color:var(--green);
+    font-size:9px;
+}
+
+/* ACTION */
+
+.action{
+    height:80px;
+    border-radius:16px;
+    border:1px solid rgba(25,242,160,.2);
+    background:
+        linear-gradient(
+            100deg,
+            rgba(25,242,160,.09),
+            rgba(25,242,160,.025)
+        );
+    padding:18px;
+    display:flex;
+    align-items:center;
+    gap:13px;
+}
+
+.action-icon{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:var(--green);
+    color:#001b12;
+    font-size:18px;
+}
+
+.action-text small{
+    display:block;
+    color:#55727a;
+    font-size:8px;
+}
+
+.action-text strong{
+    font-size:12px;
+}
+
+/* BOTTOM INTELLIGENCE */
+
+.intelligence{
+    margin-top:20px;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:15px;
+}
+
+.intel{
+    height:85px;
+    border:1px solid var(--line);
+    border-radius:15px;
+    background:rgba(5,20,28,.8);
+    padding:17px;
+    display:flex;
+    align-items:center;
+    gap:13px;
+}
+
+.intel-icon{
+    width:39px;
+    height:39px;
+    border-radius:11px;
+    display:grid;
+    place-items:center;
+    background:rgba(25,242,160,.06);
+}
+
+.intel-icon svg{
+    width:21px;
+    stroke:var(--green);
+}
+
+.intel small{
+    color:#526f78;
+    display:block;
+    font-size:8px;
+}
+
+.intel strong{
+    font-size:12px;
+}
+
+/* FOOTER */
+
+footer{
+    display:flex;
+    justify-content:space-between;
+    color:#405c65;
+    font-size:8px;
+    letter-spacing:2px;
+    padding:22px 5px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+
+    .workspace{
+        grid-template-columns:1fr;
+    }
+
+    .core-panel{
+        height:500px;
+    }
+
+    .intelligence{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:600px){
+
+    .sidebar{
+        display:none;
+    }
+
+    main{
+        margin-left:0;
+        padding:12px;
+    }
+
+    .search{
+        width:170px;
+    }
+
+    .title h1{
+        font-size:29px;
+    }
+
+    .date{
+        display:none;
+    }
+
+    .core-panel{
+        height:470px;
+    }
+
+    .radar{
+        width:370px;
+        height:370px;
+    }
+
+    .security-core{
+        width:150px;
+        height:150px;
+    }
+
+    .core-inner{
+        width:118px;
+        height:118px;
+    }
+
+    .upload-trigger{
+        width:220px;
+    }
+}
+</style>
+</head>
+
+
+<body>
+
+<div class="grid"></div>
+
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+<div class="logo">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+<path d="M12 2L20 5V11C20 16 16 20 12 22C8 20 4 16 4 11V5L12 2Z"/>
+<path d="M8 12L11 15L16 9"/>
+</svg>
+
+</div>
+
+
+<div class="side-nav">
+
+<button class="nav active">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="12" cy="12" r="3"/>
+<circle cx="12" cy="12" r="9"/>
+</svg>
+</button>
+
+<button class="nav">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M5 3H15L19 7V21H5Z"/>
+<path d="M15 3V8H19"/>
+</svg>
+</button>
+
+<button class="nav">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 7V12L15 14"/>
+</svg>
+</button>
+
+<button class="nav">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M4 19V11"/>
+<path d="M10 19V5"/>
+<path d="M16 19V8"/>
+<path d="M22 19V3"/>
+</svg>
+</button>
+
+<button class="nav">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="12" cy="12" r="3"/>
+<path d="M19 12A7 7 0 0 0 18 8"/>
+<path d="M5 12A7 7 0 0 1 6 8"/>
+</svg>
+</button>
+
+</div>
+
+
+<div class="sidebar-bottom">
+FINANCIAL SECURITY
+</div>
+
+</aside>
+
+
+<main>
+
+<!-- TOP -->
+
+<header>
+
+<div class="system">
+<i class="system-dot"></i>
+FINSHIELD SECURITY NETWORK
+</div>
+
+
+<div class="top-right">
+
+<div class="search">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+<circle cx="11" cy="11" r="7"/>
+<path d="M16 16L21 21"/>
+</svg>
+
+<input placeholder="Search...">
+
+</div>
+
+<div class="avatar">V</div>
+
+</div>
+
+</header>
+
+
+<!-- TITLE -->
+
+<section class="title">
+
+<div>
+
+<h1>FIN<span>SHIELD</span></h1>
+
+<p>FINANCIAL THREAT INTELLIGENCE</p>
+
+</div>
+
+<div class="date">
+SECURITY CORE / ACTIVE
+</div>
+
+</section>
+
+
+<!-- WORKSPACE -->
+
+<section class="workspace">
+
+
+<!-- CENTRAL SECURITY CORE -->
+
+<div class="core-panel">
+
+<div class="core-top">
+
+<div class="tag">
+SECURITY CORE
+</div>
+
+<div class="live">
+<i></i>
+LIVE MONITORING
+</div>
+
+</div>
+
+
+<div class="radar">
+
+<div class="cross-x"></div>
+<div class="cross-y"></div>
+<div class="radar-line"></div>
+
+<div class="node n1"></div>
+<div class="node n2"></div>
+<div class="node n3"></div>
+<div class="node n4"></div>
+<div class="node n5"></div>
+<div class="node n6"></div>
+
+</div>
+
+
+<div class="security-core">
+
+<div class="core-inner">
+
+<div class="core-icon">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="1.4">
+
+<path d="M12 2L20 5V11C20 16 16 20 12 22C8 20 4 16 4 11V5L12 2Z"/>
+
+<path d="M8 12L11 15L16 9"/>
+
+</svg>
+
+</div>
+
+</div>
+
+<div class="core-label">
+FINANCIAL CORE
+<strong>PROTECTED</strong>
+</div>
+
+</div>
+
+
+<input
+type="file"
+id="file"
+accept=".pdf,.csv,.xlsx,.jpg,.jpeg,.png"
+>
+
+
+<button
+class="upload-trigger"
+onclick="document.getElementById('file').click()">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+<path d="M12 16V4"/>
+<path d="M7 9L12 4L17 9"/>
+<path d="M5 20H19"/>
+</svg>
+
+<span id="uploadText">SCAN TRANSACTION</span>
+
+</button>
+
+<div class="file-name" id="fileName"></div>
+
+</div>
+
+
+<!-- RIGHT -->
+
+<div class="side-panel">
+
+
+<!-- RISK -->
+
+<div class="risk-card">
+
+<div class="card-heading">
+
+<span>THREAT INDEX</span>
+<span>REAL-TIME</span>
+
+</div>
+
+
+<div class="score">
+
+<div class="score-ring">
+
+<div class="score-inner">
+
+<div class="score-number">
+18
+<small>/ 100</small>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="low">
+LOW RISK • NO ACTIVE THREATS
+</div>
+
+</div>
+
+
+<!-- SIGNALS -->
+
+<div class="signals">
+
+<div class="card-heading">
+SECURITY SIGNALS
+<span>04 / 04</span>
+</div>
+
+
+<div class="signal">
+
+<div class="signal-icon">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+<path d="M12 2L20 5V11C20 16 16 20 12 22C8 20 4 16 4 11V5L12 2Z"/>
+<path d="M8 12L11 15L16 9"/>
+</svg>
+
+</div>
+
+<div class="signal-text">
+<small>IDENTITY</small>
+<span>Authentication</span>
+</div>
+
+<div class="ok">CLEAR</div>
+
+</div>
+
+
+<div class="signal">
+
+<div class="signal-icon">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+<circle cx="10" cy="10" r="6"/>
+<path d="M15 15L21 21"/>
+</svg>
+
+</div>
+
+<div class="signal-text">
+<small>FRAUD</small>
+<span>Pattern Engine</span>
+</div>
+
+<div class="ok">CLEAR</div>
+
+</div>
+
+
+<div class="signal">
+
+<div class="signal-icon">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+<path d="M4 19H20"/>
+<path d="M7 16V9"/>
+<path d="M12 16V5"/>
+<path d="M17 16V11"/>
+</svg>
+
+</div>
+
+<div class="signal-text">
+<small>AMOUNT</small>
+<span>Value Analysis</span>
+</div>
+
+<div class="ok">NORMAL</div>
+
+</div>
+
+
+<div class="signal">
+
+<div class="signal-icon">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+<path d="M5 3H15L19 7V21H5Z"/>
+<path d="M15 3V8H19"/>
+<path d="M8 14L10 16L15 11"/>
+</svg>
+
+</div>
+
+<div class="signal-text">
+<small>DOCUMENT</small>
+<span>Integrity</span>
+</div>
+
+<div class="ok">VALID</div>
+
+</div>
+
+</div>
+
+
+<!-- ACTION -->
+
+<div class="action">
+
+<div class="action-icon">✓</div>
+
+<div class="action-text">
+<small>FINSHIELD DECISION</small>
+<strong>Transaction appears secure</strong>
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- INTELLIGENCE -->
+
+<section class="intelligence">
+
+<div class="intel">
+
+<div class="intel-icon">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+<rect x="5" y="10" width="14" height="11" rx="2"/>
+<path d="M8 10V7A4 4 0 0 1 16 7V10"/>
+</svg>
+
+</div>
+
+<div>
+<small>DATA LAYER</small>
+<strong>Encrypted</strong>
+</div>
+
+<div class="system-dot"></div>
+
+</div>
+
+
+<div class="intel">
+
+<div class="intel-icon">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+<path d="M3 3L21 21"/>
+<path d="M5 10A9 9 0 0 0 12 19"/>
+<path d="M10 5A9 9 0 0 1 21 12"/>
+</svg>
+
+</div>
+
+<div>
+<small>ACCESS</small>
+<strong>Private</strong>
+</div>
+
+<div class="system-dot"></div>
+
+</div>
+
+
+<div class="intel">
+
+<div class="intel-icon">
+
+<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8">
+<path d="M12 3L20 6V11C20 16 16 20 12 21C8 20 4 16 4 11V6L12 3Z"/>
+<path d="M8 12L11 15L16 9"/>
+</svg>
+
+</div>
+
+<div>
+<small>NETWORK</small>
+<strong>Trusted</strong>
+</div>
+
+<div class="system-dot"></div>
+
+</div>
+
+</section>
+
+
+<footer>
+
+<span>FINSHIELD / SECURITY INTELLIGENCE</span>
+
+<span>SAFE • PRIVATE • PROTECTED</span>
+
+</footer>
+
+
+</main>
+
+
+<script>
+
+const file = document.getElementById("file");
+const fileName = document.getElementById("fileName");
+const uploadText = document.getElementById("uploadText");
+
+file.addEventListener("change",function(){
+
+    if(this.files.length){
+
+        uploadText.textContent="DOCUMENT READY";
+
+        fileName.textContent=
+            "✓ "+this.files[0].name;
+
+    }
+
+});
+
+
+document.querySelectorAll(".nav").forEach(button=>{
+
+    button.addEventListener("click",function(){
+
+        document.querySelectorAll(".nav")
+        .forEach(x=>x.classList.remove("active"));
+
+        this.classList.add("active");
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>
