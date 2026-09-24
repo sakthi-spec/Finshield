@@ -7,6 +7,13 @@ from pydantic import BaseModel
 
 from backend import pdf_reader, transaction_parser, anomaly_engine
 from backend.rag import StatementSession
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from backend.database import (
+    statements_collection,
+    transactions_collection,
+)
 
 
 app = FastAPI(title="FinShield API")
@@ -86,8 +93,32 @@ async def upload_statement(file: UploadFile = File(...)):
         #    Embeddings are created ONCE here.
         current_session = StatementSession(transactions)
 
-        # 8. Return processed statement
+        # 8. Create a unique ID for this uploaded statement
+        statement_id = str(uuid4())
+        uploaded_at = datetime.now(timezone.utc)
+
+        # 9. Save statement metadata to MongoDB
+        statements_collection.insert_one({
+            "_id": statement_id,
+            "filename": file.filename,
+            "uploaded_at": uploaded_at,
+            "transaction_count": len(annotated_transactions),
+        })
+
+        # 10. Save transactions to MongoDB
+        transaction_documents = []
+
+        for transaction in annotated_transactions:
+            transaction_document = dict(transaction)
+            transaction_document["statement_id"] = statement_id
+            transaction_documents.append(transaction_document)
+
+        if transaction_documents:
+            transactions_collection.insert_many(transaction_documents)
+
+        # 11. Return processed statement
         return {
+            "statement_id": statement_id,
             "filename": file.filename,
             "transaction_count": len(annotated_transactions),
             "transactions": annotated_transactions,
@@ -104,7 +135,7 @@ async def upload_statement(file: UploadFile = File(...)):
         )
 
     finally:
-        # 9. Remove temporary PDF
+        # 12. Remove temporary PDF
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
 
