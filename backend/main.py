@@ -2,6 +2,7 @@ import os
 import tempfile
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from backend import pdf_reader, transaction_parser, anomaly_engine
@@ -23,9 +24,13 @@ class AskRequest(BaseModel):
 
 @app.get("/")
 def root():
-    return {
-        "message": "FinShield API is running"
-    }
+    frontend_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "frontend",
+        "index.html"
+    )
+
+    return FileResponse(frontend_path)
 
 
 @app.get("/health")

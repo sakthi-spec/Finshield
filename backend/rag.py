@@ -578,7 +578,11 @@ fraudulent. Use wording such as
 """
 
     payload = {
-        "model": "openrouter/free",
+        "models": [
+            "nvidia/nemotron-3-ultra-550b-a55b:free",
+            "inclusionai/ling-3.0-flash-fin:free",
+            "poolside/laguna-s-2.1:free"
+        ],
         "messages": [
             {
                 "role": "user",
@@ -607,11 +611,21 @@ fraudulent. Use wording such as
 
     except urllib.error.HTTPError as e:
         error_body = e.read().decode("utf-8", errors="replace")
+
+        # The financial calculation is already authoritative.
+        # If the LLM is unavailable, return the exact Python result
+        # instead of breaking the entire /ask feature.
+        if exact_result:
+            return exact_result
+
         raise RuntimeError(
             f"OpenRouter API error {e.code}: {error_body}"
         ) from e
 
     except urllib.error.URLError as e:
+        if exact_result:
+            return exact_result
+
         raise RuntimeError(
             f"Could not connect to OpenRouter: {e.reason}"
         ) from e
