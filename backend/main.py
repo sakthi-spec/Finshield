@@ -13,6 +13,7 @@ from uuid import uuid4
 from backend.database import (
     statements_collection,
     transactions_collection,
+    questions_collection,
 )
 
 
@@ -21,7 +22,7 @@ app = FastAPI(title="FinShield API")
 
 # Holds the currently uploaded statement for this MVP.
 # Later, this can be replaced with proper per-user/session storage.
-current_session: StatementSession | None = None
+current_statement_id: str | None = None
 
 
 class AskRequest(BaseModel):
@@ -49,7 +50,9 @@ def health():
 
 @app.post("/upload")
 async def upload_statement(file: UploadFile = File(...)):
-    global current_session
+    global current_session, current_statement_id
+    statement_id = str(uuid4())
+    current_statement_id = statement_id
 
     # 1. Validate file
     if not file.filename or not file.filename.lower().endswith(".pdf"):
@@ -154,6 +157,22 @@ async def ask_finshield(request: AskRequest):
             top_k=request.top_k
         )
 
+        # Save the question and answer to MongoDB
+        question_document = {
+            "_id": str(uuid4()),
+            "statement_id": current_statement_id,
+            "question": request.question,
+            "top_k": request.top_k,
+            "intent": result.get("intent"),
+            "intents": result.get("intents", []),
+            "computed_results": result.get("computed_results", {}),
+            "answer": result.get("answer", ""),
+            "transactions_used": result.get("transactions_used", []),
+            "asked_at": datetime.now(timezone.utc),
+        }
+
+        questions_collection.insert_one(question_document)
+
         return result
 
     except Exception as e:
@@ -253,4 +272,4 @@ async def financial_overview():
         raise HTTPException(
             status_code=500,
             detail=f"Failed to build financial overview: {str(e)}"
-        )    
+        )
