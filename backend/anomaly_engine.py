@@ -40,6 +40,7 @@ SHIELD_WEIGHTS = {
     "new_merchant": 1,
     "frequency": 2,
     "duplicate": 2,
+    "merchant_history": 2,
 }
 
 AMOUNT_STD_MULTIPLIER = 2.0          # flag if amount > mean + 2*std
@@ -47,6 +48,8 @@ MIN_TRANSACTIONS_FOR_STATS = 4       # need at least this many to trust mean/std
 FREQUENCY_THRESHOLD_PER_DAY = 4      # more than this many txns/day is unusual
 DUPLICATE_WINDOW_MINUTES = 120       # same merchant+amount within this window
 DUPLICATE_AMOUNT_TOLERANCE = 0.01    # amounts within this fraction count as "same"
+MIN_MERCHANT_HISTORY = 2             # need enough prior merchant data to compare
+MERCHANT_AMOUNT_RATIO = 2.0          # conservative relative-change threshold
 
 SEVERITY_BANDS = [
     (0, 0, "NONE"),
@@ -186,7 +189,57 @@ def duplicate_shield(txn: Transaction, all_txns: list[Transaction]) -> ShieldRes
     return ShieldResult("duplicate", False, SHIELD_WEIGHTS["duplicate"])
 
 
-SHIELD_FUNCTIONS = [amount_shield, new_merchant_shield, frequency_shield, duplicate_shield]
+def merchant_history_shield(
+    txn: Transaction,
+    prior_txns: list[Transaction],
+) -> ShieldResult:
+    """Flags a meaningful amount change for a merchant with prior history."""
+    merchant = txn.merchant.strip().lower()
+    merchant_history = [
+        other
+        for other in prior_txns
+        if other.merchant.strip().lower() == merchant
+    ]
+
+    if len(merchant_history) < MIN_MERCHANT_HISTORY:
+        return ShieldResult(
+            "merchant_history",
+            False,
+            SHIELD_WEIGHTS["merchant_history"],
+        )
+
+    historical_amounts = [other.amount for other in merchant_history]
+    historical_median = statistics.median(historical_amounts)
+    historical_mean = statistics.mean(historical_amounts)
+    historical_std = statistics.pstdev(historical_amounts)
+    comparison_limit = max(
+        historical_median * MERCHANT_AMOUNT_RATIO,
+        historical_mean + 2 * historical_std,
+    )
+
+    if txn.amount > comparison_limit:
+        return ShieldResult(
+            "merchant_history",
+            True,
+            SHIELD_WEIGHTS["merchant_history"],
+            f"'{txn.merchant}' charge of ₹{txn.amount:,.2f} is notably above "
+            f"its prior typical amount (median ₹{historical_median:,.2f})",
+        )
+
+    return ShieldResult(
+        "merchant_history",
+        False,
+        SHIELD_WEIGHTS["merchant_history"],
+    )
+
+
+SHIELD_FUNCTIONS = [
+    amount_shield,
+    new_merchant_shield,
+    frequency_shield,
+    duplicate_shield,
+    merchant_history_shield,
+]
 
 
 # ---------------------------------------------------------------------------
@@ -210,7 +263,7 @@ def evaluate_transaction(
 
     results: list[ShieldResult] = []
     for shield_fn in SHIELD_FUNCTIONS:
-        if shield_fn is new_merchant_shield:
+        if shield_fn in {new_merchant_shield, merchant_history_shield}:
             results.append(shield_fn(txn, prior_txns))
         else:
             results.append(shield_fn(txn, all_txns))
