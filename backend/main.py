@@ -22,8 +22,43 @@ app = FastAPI(title="FinShield API")
 
 # Holds the currently uploaded statement for this MVP.
 # Later, this can be replaced with proper per-user/session storage.
+current_session: StatementSession | None = None
 current_statement_id: str | None = None
+def restore_latest_session():
+    global current_session, current_statement_id
 
+    try:
+        latest_statement = statements_collection.find_one(
+            {},
+            sort=[("uploaded_at", -1)]
+        )
+
+        if not latest_statement:
+            return False
+
+        statement_id = latest_statement["_id"]
+
+        stored_transactions = list(
+            transactions_collection.find(
+                {"statement_id": statement_id},
+                {"_id": 0}
+            )
+        )
+
+        if not stored_transactions:
+            return False
+
+        current_session = StatementSession(
+            stored_transactions
+        )
+
+        current_statement_id = statement_id
+
+        return True
+
+    except Exception as e:
+        print(f"Failed to restore latest statement: {e}")
+        return False
 
 class AskRequest(BaseModel):
     question: str
@@ -146,9 +181,12 @@ async def upload_statement(file: UploadFile = File(...)):
 @app.post("/ask")
 async def ask_finshield(request: AskRequest):
     if current_session is None:
+        restore_latest_session()
+
+    if current_session is None:
         raise HTTPException(
             status_code=400,
-            detail="Please upload a bank statement before asking questions."
+            detail="No saved bank statement found. Please upload a statement."
         )
 
     try:
@@ -180,6 +218,8 @@ async def ask_finshield(request: AskRequest):
             status_code=500,
             detail=f"Failed to answer question: {str(e)}"
         )
+
+
 def build_financial_overview(session: StatementSession) -> dict:
     transactions = session.transactions
 
@@ -258,9 +298,12 @@ def build_financial_overview(session: StatementSession) -> dict:
 @app.get("/overview")
 async def financial_overview():
     if current_session is None:
+        restore_latest_session()
+
+    if current_session is None:
         raise HTTPException(
             status_code=400,
-            detail="Please upload a bank statement first."
+            detail="No saved bank statement found. Please upload a statement."
         )
 
     try:
@@ -273,3 +316,183 @@ async def financial_overview():
             status_code=500,
             detail=f"Failed to build financial overview: {str(e)}"
         )
+
+
+def _serialize_datetime(value):
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return value
+
+
+@app.get("/files")
+def list_statement_files():
+    try:
+        statements = statements_collection.find(
+            {},
+            {
+                "_id": 1,
+                "filename": 1,
+                "uploaded_at": 1,
+                "transaction_count": 1,
+            }
+        ).sort("uploaded_at", -1)
+
+        files = []
+
+        for statement in statements:
+            statement_id = statement["_id"]
+
+            transactions = list(
+                transactions_collection.find(
+                    {"statement_id": statement_id},
+                    {
+                        "_id": 0,
+                        "amount": 1,
+                        "severity": 1,
+                    }
+                )
+            )
+
+            total_spending = sum(
+                float(transaction.get("amount", 0))
+                for transaction in transactions
+            )
+
+            unusual_count = sum(
+                1
+                for transaction in transactions
+                if transaction.get("severity") in {
+                    "MEDIUM",
+                    "HIGH",
+                    "CRITICAL",
+                }
+            )
+
+            files.append({
+                "statement_id": statement_id,
+                "filename": statement.get("filename"),
+                "uploaded_at": _serialize_datetime(
+                    statement.get("uploaded_at")
+                ),
+                "transaction_count": statement.get(
+                    "transaction_count",
+                    len(transactions)
+                ),
+                "total_spending": round(total_spending, 2),
+                "potentially_unusual_count": unusual_count,
+            })
+
+        return {
+            "count": len(files),
+            "files": files,
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load statement files: {str(e)}"
+        )
+
+
+@app.get("/files/{statement_id}")
+def get_statement_file(statement_id: str):
+    try:
+        statement = statements_collection.find_one(
+            {"_id": statement_id}
+        )
+
+        if not statement:
+            raise HTTPException(
+                status_code=404,
+                detail="Statement not found."
+            )
+
+        transactions = list(
+            transactions_collection.find(
+                {"statement_id": statement_id},
+                {"_id": 0}
+            )
+        )
+
+        questions = list(
+            questions_collection.find(
+                {"statement_id": statement_id},
+                {"_id": 0}
+            ).sort("asked_at", -1)
+        )
+
+        total_spending = sum(
+            float(transaction.get("amount", 0))
+            for transaction in transactions
+        )
+
+        unusual_transactions = [
+            transaction
+            for transaction in transactions
+            if transaction.get("severity") in {
+                "MEDIUM",
+                "HIGH",
+                "CRITICAL",
+            }
+        ]
+
+        largest_transaction = max(
+            transactions,
+            key=lambda transaction: float(
+                transaction.get("amount", 0)
+            ),
+            default=None,
+        )
+
+        category_spending = {}
+
+        for transaction in transactions:
+            category = transaction.get("category", "Other")
+
+            category_spending[category] = (
+                category_spending.get(category, 0.0)
+                + float(transaction.get("amount", 0))
+            )
+
+        return {
+            "statement": {
+                "statement_id": statement["_id"],
+                "filename": statement.get("filename"),
+                "uploaded_at": _serialize_datetime(
+                    statement.get("uploaded_at")
+                ),
+                "transaction_count": len(transactions),
+            },
+            "summary": {
+                "total_spending": round(total_spending, 2),
+                "potentially_unusual_count": len(
+                    unusual_transactions
+                ),
+                "largest_transaction": (
+                    {
+                        "id": largest_transaction.get("id"),
+                        "date": largest_transaction.get("date"),
+                        "merchant": largest_transaction.get("merchant"),
+                        "amount": largest_transaction.get("amount"),
+                        "category": largest_transaction.get("category"),
+                    }
+                    if largest_transaction
+                    else None
+                ),
+                "category_spending": {
+                    category: round(amount, 2)
+                    for category, amount in category_spending.items()
+                },
+            },
+            "transactions": transactions,
+            "questions": questions,
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load statement: {str(e)}"
+        )    
