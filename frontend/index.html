@@ -138,6 +138,39 @@ main{margin-left:82px;min-height:100vh;padding:18px 30px 40px;position:relative;
 #file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .file-name{color:var(--green);font-size:9px;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
 .file-name button{border:0;background:transparent;color:#7e969d;cursor:pointer;font-size:9px;text-decoration:underline}
+
+/* ---------- PERSISTENT STATEMENT VAULT ---------- */
+.vault-trigger{
+  height:53px;padding:0 17px;border:1px solid rgba(53,223,255,.28);border-radius:12px;
+  background:rgba(53,223,255,.06);color:#234a55;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:8px;font-size:10px;letter-spacing:1px;transition:.25s;position:relative
+}
+.vault-trigger:hover{background:rgba(53,223,255,.11);border-color:rgba(53,223,255,.45);box-shadow:0 0 24px rgba(53,223,255,.08)}
+.vault-trigger svg{width:16px;stroke:#1a9db5}
+.vault-count{min-width:17px;height:17px;padding:0 5px;border-radius:20px;background:#35dfff;color:#08323b;
+  display:grid;place-items:center;font-size:8px;font-weight:800;letter-spacing:0;position:absolute;top:-7px;right:-7px}
+.vault-backdrop{position:fixed;inset:0;background:rgba(8,32,38,.26);backdrop-filter:blur(5px);z-index:75;display:none}
+.vault-backdrop.show{display:block}
+.vault-drawer{position:fixed;top:0;right:0;bottom:0;width:400px;max-width:94vw;background:#f7fbfc;
+  border-left:1px solid rgba(40,130,150,.16);z-index:80;transform:translateX(100%);transition:transform .3s ease;
+  display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(18,58,67,.16)}
+.vault-drawer.show{transform:translateX(0)}
+.vault-head{padding:21px 20px;border-bottom:1px solid rgba(40,130,150,.14);display:flex;
+  justify-content:space-between;align-items:flex-start;gap:14px;flex-shrink:0}
+.vault-head b{font-size:12px;letter-spacing:1.2px;color:#143a44}.vault-head small{display:block;color:#6d858c;font-size:9px;
+  line-height:1.6;margin-top:5px;max-width:285px}.vault-body{flex:1;overflow-y:auto;padding:16px 20px}.vault-refresh{width:100%;border:1px solid rgba(25,150,120,.22);
+  background:rgba(25,150,120,.05);color:#16745d;border-radius:10px;padding:10px;font-size:9px;letter-spacing:1px;cursor:pointer;margin-bottom:13px}.vault-refresh:hover{background:rgba(25,150,120,.09)}
+.vault-list{display:flex;flex-direction:column;gap:10px}.vault-empty{text-align:center;color:#70858b;font-size:11px;line-height:1.7;padding:45px 14px;border:1px dashed rgba(40,130,150,.18);border-radius:14px}
+.vault-card{border:1px solid rgba(40,130,150,.14);border-radius:14px;background:#fff;padding:14px;cursor:pointer;transition:.22s}
+.vault-card:hover{border-color:rgba(25,160,125,.35);transform:translateY(-1px);box-shadow:0 10px 25px rgba(17,71,82,.07)}
+.vault-card.active{border-color:rgba(25,160,125,.46);box-shadow:inset 3px 0 0 #19a77f,0 10px 25px rgba(17,71,82,.06)}
+.vault-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.vault-card-name{font-size:11px;font-weight:700;color:#183c45;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vault-card-date{font-size:8px;color:#7a9096;margin-top:4px}.vault-card-amount{font-size:15px;font-weight:800;color:#128267;white-space:nowrap}
+.vault-card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}.vault-chip{font-size:8px;padding:4px 8px;border-radius:20px;
+  border:1px solid rgba(40,130,150,.13);color:#60777e;background:#f7fbfc}.vault-chip.warn{color:#9b6a08;border-color:rgba(190,145,35,.22);background:#fff9e8}
+.vault-foot{border-top:1px solid rgba(40,130,150,.14);padding:15px 20px;flex-shrink:0}.vault-foot-note{font-size:9px;line-height:1.7;color:#71868c}
+
+@media(max-width:600px){.vault-trigger{width:230px}.vault-drawer{width:100vw}}
 .side-panel{display:flex;flex-direction:column;gap:15px}
 .risk-card{min-height:270px;border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:20px}
 .card-heading{display:flex;justify-content:space-between;align-items:center;color:#a5b8bd;font-size:11px;letter-spacing:1px}
@@ -188,6 +221,9 @@ tbody td{padding:13px 16px;font-size:11px;border-bottom:1px solid rgba(255,255,2
 .unusual-card{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:18px;border-left:3px solid var(--amber)}
 .uc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.uc-merchant{font-size:13px;font-weight:700}.uc-meta{font-size:9px;color:#5d7881;margin-top:4px}.uc-amount{font-size:16px;font-weight:800;text-align:right}.uc-reasons{margin-top:12px;font-size:10px;color:#9fb4ba;line-height:1.7}.uc-reasons li{margin-left:16px}.uc-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
 .analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.history-band{margin-top:18px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.92);padding:20px;box-shadow:0 12px 36px rgba(25,64,68,.045)}
+.history-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}.history-heading span{color:#637980;font-size:10px;letter-spacing:1px}.history-heading small{color:#71868c;font-size:9px}
+.history-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.history-stat{border:1px solid rgba(20,72,79,.10);border-radius:12px;padding:12px 14px;background:rgba(10,143,104,.025)}.history-stat small{display:block;color:#71868c;font-size:8px;letter-spacing:1px}.history-stat strong{display:block;margin-top:7px;font-size:15px;color:var(--text)}
 footer{display:flex;justify-content:space-between;color:#405c65;font-size:8px;letter-spacing:2px;padding:22px 5px;flex-wrap:wrap;gap:6px}
 .status-note{position:fixed;right:24px;bottom:24px;z-index:60;max-width:360px;padding:12px 15px;border:1px solid var(--line);border-radius:12px;background:rgba(3,17,23,.96);color:#cfe5e0;font-size:10px;line-height:1.5;box-shadow:0 10px 40px rgba(0,0,0,.35);opacity:0;transform:translateY(12px);pointer-events:none;transition:.25s}
 .status-note.show{opacity:1;transform:translateY(0)}.status-note.error{border-color:rgba(255,107,107,.4);color:#ffd7d7}
@@ -200,17 +236,224 @@ footer{display:flex;justify-content:space-between;color:#405c65;font-size:8px;le
 .ask-result-item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:rgba(25,242,160,.03)}
 .ask-result-item small{display:block;color:#55717a;font-size:8px;letter-spacing:1px;margin-bottom:6px}.ask-result-item strong{font-size:14px}
 .ask-answer{color:#e5f4f0;font-size:12px;line-height:1.8;white-space:pre-wrap}.ask-loading{display:flex;align-items:center;gap:10px;color:#9fb4ba;font-size:11px;padding:10px 0}
+.ask-workspace{margin-top:22px;border:1px solid rgba(10,143,104,.19);border-radius:20px;background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(237,245,242,.78));padding:25px;box-shadow:0 16px 42px rgba(25,64,68,.06);transition:border-color .3s,box-shadow .3s}
+.ask-workspace.has-response{border-color:rgba(10,143,104,.34);box-shadow:0 18px 48px rgba(25,64,68,.09)}.ask-workspace.is-inactive{opacity:.82}
+.ask-workspace-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}.ask-workspace-title{display:flex;align-items:flex-start;gap:11px}.ask-workspace-icon{width:34px;height:34px;border:1px solid rgba(10,143,104,.2);border-radius:10px;display:grid;place-items:center;color:var(--green);background:rgba(10,143,104,.07);flex-shrink:0}.ask-workspace-icon svg{width:18px}
+.ask-workspace-title small{display:block;color:#6d8389;font-size:9px;letter-spacing:1.8px;margin-bottom:5px}.ask-workspace-title h2{font-size:19px;letter-spacing:.2px;color:var(--text)}.ask-workspace-title p{font-size:11px;color:#6d8389;margin-top:6px}.ask-context{text-align:right;color:#6d8389;font-size:8px;letter-spacing:1.2px;line-height:1.7;max-width:190px}.ask-context strong{display:block;color:var(--green);font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ask-workspace-form{display:flex;gap:10px}.ask-workspace-form input{min-width:0;flex:1;height:48px;border:1px solid rgba(20,72,79,.14);border-radius:11px;background:rgba(255,255,255,.82);padding:0 15px;color:var(--text);font-size:12px;outline:0;transition:.2s}.ask-workspace-form input::placeholder{color:#82969c}.ask-workspace-form input:focus{border-color:rgba(10,143,104,.48);box-shadow:0 0 0 3px rgba(10,143,104,.08)}.ask-workspace-form input:disabled{background:rgba(20,72,79,.04);cursor:not-allowed}
+.ask-workspace-submit{min-width:92px;border:1px solid rgba(10,143,104,.26);border-radius:11px;background:var(--green);color:#fff;cursor:pointer;font-size:10px;font-weight:700;letter-spacing:1.2px;transition:.2s}.ask-workspace-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 20px rgba(10,143,104,.18)}.ask-workspace-submit:disabled{opacity:.55;cursor:not-allowed}
+.ask-quick{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:15px}.ask-quick-label{color:#6d8389;font-size:8px;letter-spacing:1.2px;margin-right:2px}.ask-quick button{border:1px solid rgba(20,72,79,.13);border-radius:20px;background:rgba(255,255,255,.66);color:#42626a;padding:8px 11px;font-size:10px;cursor:pointer;transition:.2s}.ask-quick button:hover:not(:disabled){border-color:rgba(10,143,104,.34);color:var(--green);background:#fff;transform:translateY(-1px)}.ask-quick button:disabled{color:#9aaeb0;background:rgba(20,72,79,.035);cursor:not-allowed}
+.ask-workspace-response{display:none;margin-top:23px;padding-top:21px;border-top:1px solid rgba(20,72,79,.10);animation:ask-response-in .35s ease}.ask-workspace-response.show{display:block}@keyframes ask-response-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}.ask-response-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:13px}.ask-response-head strong{font-size:9px;letter-spacing:1.4px;color:var(--green)}.ask-response-head span{font-size:8px;color:#789096;letter-spacing:1px}.ask-workspace-question{font-size:12px;color:#294850;margin-bottom:16px}.ask-workspace-question small{display:block;color:#6d8389;font-size:8px;letter-spacing:1.2px;margin-bottom:5px}.ask-workspace .ask-results{margin-bottom:15px}
 .mobile-nav-toggle{display:none}
 @media(max-width:1100px){.overview-stats{grid-template-columns:repeat(3,1fr)}.overview-lower{grid-template-columns:1fr}.analytics-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.history-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){.workspace{grid-template-columns:1fr}.core-panel{height:500px}.overview-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){
   .sidebar{display:none}main{margin-left:0;padding:14px 14px 90px}.search{max-width:none}.title h1{font-size:27px}.date{display:none}
   .core-panel{height:460px}.radar{width:340px;height:340px}.security-core{width:140px;height:140px}.core-inner{width:110px;height:110px}
   .upload-trigger{width:230px;font-size:10px}.overview-stats{grid-template-columns:1fr 1fr}
+  .ask-workspace{padding:20px}.ask-workspace-head{flex-direction:column}.ask-context{text-align:left;max-width:100%}.ask-workspace-form{flex-direction:column}.ask-workspace-submit{height:44px}.ask-quick{align-items:flex-start}.ask-quick-label{width:100%}
   .mobile-nav-toggle{display:flex;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:40;background:rgba(3,17,23,.96);border:1px solid var(--line);border-radius:30px;padding:8px;gap:6px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
   .mobile-nav-toggle button{width:38px;height:38px;border-radius:50%;border:0;background:transparent;color:#68818a;display:grid;place-items:center;cursor:pointer}
   .mobile-nav-toggle button.active{color:var(--green);background:rgba(25,242,160,.1)}.mobile-nav-toggle svg{width:18px}
 }
+
+/* ---------- LIGHT FINANCIAL SECURITY THEME ---------- */
+:root{
+  --bg:#f4f8f7;
+  --panel:#ffffff;
+  --panel2:#edf5f2;
+  --green:#0a8f68;
+  --cyan:#177da4;
+  --amber:#a86d16;
+  --red:#c44747;
+  --text:#10252b;
+  --muted:#667980;
+  --line:rgba(20,72,79,.13);
+}
+
+body{
+  background:
+    radial-gradient(circle at 50% 42%,rgba(10,143,104,.09),transparent 27%),
+    radial-gradient(circle at 92% 3%,rgba(23,125,164,.08),transparent 28%),
+    #f4f8f7;
+}
+
+.grid{
+  opacity:.18;
+  background-image:
+    linear-gradient(rgba(26,93,98,.10) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(26,93,98,.10) 1px,transparent 1px);
+}
+
+.sidebar{
+  background:rgba(255,255,255,.92);
+  border-right-color:rgba(20,72,79,.12);
+  box-shadow:6px 0 30px rgba(28,64,68,.045);
+}
+
+.logo{
+  background:rgba(10,143,104,.07);
+  border-color:rgba(10,143,104,.26);
+  box-shadow:0 0 28px rgba(10,143,104,.08);
+}
+
+.nav{color:#6e858c}
+.nav:hover,.nav.active{
+  color:var(--green);
+  background:rgba(10,143,104,.08);
+  box-shadow:0 0 22px rgba(10,143,104,.06),inset 0 0 0 1px rgba(10,143,104,.12);
+}
+.nav-tip{
+  background:#ffffff;
+  border-color:rgba(20,72,79,.12);
+  box-shadow:0 12px 30px rgba(28,64,68,.10);
+  color:#416068;
+}
+.sidebar-bottom{color:#7a9197}
+
+.system{color:#5f747b}
+.system-dot{box-shadow:0 0 14px rgba(10,143,104,.35)}
+
+.search{
+  background:rgba(255,255,255,.88);
+  border-color:rgba(20,72,79,.12);
+  box-shadow:0 8px 24px rgba(28,64,68,.035);
+}
+.search:focus-within{
+  border-color:rgba(10,143,104,.34);
+  box-shadow:0 0 20px rgba(10,143,104,.08);
+}
+.search svg{stroke:#789096}
+.search input{color:#183037}
+.search input::placeholder{color:#82969c}
+.ask-btn:hover{background:rgba(10,143,104,.08)}
+.avatar{background:#e6f1ef;color:#21444a}
+
+.title p,.date,.view-header span{color:#6e8389}
+.date strong{color:var(--green)}
+
+.core-panel{
+  background:
+    radial-gradient(circle at 50% 48%,rgba(10,143,104,.07),transparent 34%),
+    rgba(255,255,255,.88);
+  box-shadow:0 16px 50px rgba(25,64,68,.055);
+}
+
+.radar{border-color:rgba(10,143,104,.16)}
+.radar:before,.radar:after{border-color:rgba(10,143,104,.10)}
+.cross-x,.cross-y{background:rgba(10,143,104,.07)}
+.radar-line{background:linear-gradient(90deg,rgba(10,143,104,.52),transparent)}
+.radar.alert{border-color:rgba(168,109,22,.25)}
+.radar.alert .radar-line{background:linear-gradient(90deg,rgba(168,109,22,.55),transparent)}
+
+.security-core{
+  background:radial-gradient(circle,rgba(10,143,104,.11),rgba(255,255,255,.98) 63%);
+  border-color:rgba(10,143,104,.34);
+  box-shadow:0 0 50px rgba(10,143,104,.09),inset 0 0 35px rgba(10,143,104,.055);
+}
+.security-core.attention{
+  border-color:rgba(168,109,22,.48);
+  box-shadow:0 0 50px rgba(168,109,22,.10),inset 0 0 35px rgba(168,109,22,.06);
+}
+.core-inner{border-color:rgba(10,143,104,.30)}
+.core-label{color:#71878d}
+.core-label strong{color:var(--green)}
+
+.tag{color:#62787f}
+.live{color:var(--green)}
+.live i{box-shadow:0 0 11px rgba(10,143,104,.35)}
+
+.upload-trigger{
+  background:rgba(10,143,104,.07);
+  border-color:rgba(10,143,104,.25);
+  color:#183037;
+  box-shadow:0 8px 24px rgba(25,64,68,.035);
+}
+.upload-trigger:hover{background:rgba(10,143,104,.11);box-shadow:0 0 28px rgba(10,143,104,.08)}
+.file-name{color:var(--green)}
+
+.risk-card,.signals,.panel-card,.table-wrap{
+  background:rgba(255,255,255,.92);
+  box-shadow:0 12px 36px rgba(25,64,68,.045);
+}
+.score-ring{background:conic-gradient(var(--green) 0%,#dce9e6 0%)}
+.score-inner{background:#ffffff;box-shadow:inset 0 0 22px rgba(20,72,79,.035)}
+.risk-status-line{color:var(--green)}
+.risk-sub{color:#6e8389}
+
+.signal{border-bottom-color:rgba(20,72,79,.07)}
+.signal-icon{background:rgba(10,143,104,.065)}
+.signal-icon svg{stroke:var(--green)}
+.signal-text small,.card-heading span,.stat small,.lc-date,.vault-note{color:#71868c}
+
+.action{
+  border-color:rgba(10,143,104,.18);
+  background:linear-gradient(100deg,rgba(10,143,104,.085),rgba(10,143,104,.025));
+}
+.action.attention{
+  border-color:rgba(168,109,22,.24);
+  background:linear-gradient(100deg,rgba(168,109,22,.09),rgba(168,109,22,.025));
+}
+
+.stat{background:rgba(255,255,255,.90);box-shadow:0 10px 30px rgba(25,64,68,.035)}
+.category-row .cat-label,.largest-card .lc-merchant,.largest-card .lc-amount{color:var(--text)}
+.cat-track{background:rgba(20,72,79,.065)}
+.cat-fill{background:linear-gradient(90deg,var(--green),var(--cyan))}
+.chip{border-color:rgba(20,72,79,.12);color:#61777e}
+.chip.warn{border-color:rgba(168,109,22,.28);color:var(--amber);background:rgba(168,109,22,.065)}
+
+.empty-state{border-color:rgba(20,72,79,.14);color:#6e8389}
+.empty-state h3{color:var(--text)}
+.empty-list span{border-color:rgba(20,72,79,.12);color:#6b8087}
+
+.toolbar input,.toolbar select,.toolbar button{
+  background:#ffffff;
+  border-color:rgba(20,72,79,.12);
+  color:var(--text);
+}
+.toolbar button.active-sort{color:var(--green);border-color:rgba(10,143,104,.28)}
+thead th{color:#637980;border-bottom-color:rgba(20,72,79,.12)}
+tbody td{border-bottom-color:rgba(20,72,79,.06)}
+tbody tr:hover{background:rgba(10,143,104,.035)}
+
+.badge-none{color:var(--green);background:rgba(10,143,104,.08)}
+.badge-low{color:var(--cyan);background:rgba(23,125,164,.08)}
+.badge-medium{color:var(--amber);background:rgba(168,109,22,.10)}
+.badge-high,.badge-critical{color:var(--red);background:rgba(196,71,71,.09)}
+
+.unusual-card{background:rgba(255,255,255,.94);border-left-color:var(--amber);box-shadow:0 12px 32px rgba(25,64,68,.04)}
+.uc-meta,.uc-reasons{color:#6d8389}
+
+.status-note{
+  background:rgba(255,255,255,.97);
+  color:#31535b;
+  border-color:rgba(20,72,79,.12);
+  box-shadow:0 14px 38px rgba(25,64,68,.12);
+}
+.status-note.error{border-color:rgba(196,71,71,.28);color:#8e3c3c}
+
+.ask-modal{background:rgba(238,245,243,.72)}
+.ask-card{
+  background:#ffffff;
+  border-color:rgba(20,72,79,.12);
+  box-shadow:0 24px 70px rgba(25,64,68,.16);
+}
+.ask-title small,.ask-question{color:#6c8187}
+.ask-question-text,.ask-answer{color:#294850}
+.ask-result-item{background:rgba(10,143,104,.035);border-color:rgba(20,72,79,.12)}
+.ask-result-item small{color:#6c8187}
+
+.mobile-nav-toggle{
+  background:rgba(255,255,255,.96);
+  border-color:rgba(20,72,79,.12);
+  box-shadow:0 10px 35px rgba(25,64,68,.14);
+}
+.mobile-nav-toggle button{color:#71868d}
+.mobile-nav-toggle button.active{color:var(--green);background:rgba(10,143,104,.08)}
+
+footer{color:#6b8187}
+
 </style>
 </head>
 <body>
@@ -263,6 +506,11 @@ footer{display:flex;justify-content:space-between;color:#405c65;font-size:8px;le
   <div class="upload-zone" id="dropZone">
     <button class="upload-trigger" id="uploadButton" type="button"><svg id="uploadIcon" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 16V4"/><path d="M7 9L12 4L17 9"/><path d="M5 20H19"/></svg><span id="uploadText">SCAN BANK STATEMENT</span></button>
     <div class="file-name" id="fileNameWrap" style="display:none"><span id="fileName"></span><button id="resetBtn" type="button">clear</button></div>
+    <button class="vault-trigger" id="vaultToggleBtn" type="button" aria-label="Open saved statement vault">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M4 7H20V20H4Z"/><path d="M4 7L7 4H11L13 7"/><path d="M8 12H16"/></svg>
+      <span>STATEMENT VAULT</span>
+      <span class="vault-count" id="vaultCount" style="display:none">0</span>
+    </button>
   </div>
 </div>
 
@@ -303,6 +551,26 @@ footer{display:flex;justify-content:space-between;color:#405c65;font-size:8px;le
   </div>
 </div>
 
+<section class="ask-workspace is-inactive" id="askWorkspace" aria-labelledby="askWorkspaceTitle">
+  <div class="ask-workspace-head">
+    <div class="ask-workspace-title">
+      <div class="ask-workspace-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19 12A7 7 0 0 0 18 8"/><path d="M5 12A7 7 0 0 1 6 8"/></svg></div>
+      <div><small>FINSHIELD INTELLIGENCE</small><h2 id="askWorkspaceTitle">ASK FINSHIELD AI</h2><p>Your statement, analyzed intelligently.</p></div>
+    </div>
+    <div class="ask-context">ACTIVE STATEMENT<strong id="askContextName">UPLOAD A STATEMENT TO BEGIN</strong></div>
+  </div>
+  <div class="ask-workspace-form">
+    <input id="askWorkspaceInput" placeholder="Ask FinShield about your statement..." autocomplete="off" aria-label="Ask FinShield about the active statement">
+    <button class="ask-workspace-submit" id="askWorkspaceSubmitBtn" type="button">ASK</button>
+  </div>
+  <div class="ask-quick"><span class="ask-quick-label">QUICK QUESTIONS</span><button type="button" data-ask-question="What did I spend the most on?">What did I spend the most on?</button><button type="button" data-ask-question="What was my largest transaction?">What was my largest transaction?</button><button type="button" data-ask-question="Show potentially unusual transactions">Show potentially unusual transactions</button><button type="button" data-ask-question="How much did I spend on food?">How much did I spend on food?</button><button type="button" data-ask-question="How many transactions do I have?">How many transactions do I have?</button><button type="button" data-ask-question="Did anything look unusual?">Did anything look unusual?</button></div>
+  <div class="ask-workspace-response" id="askWorkspaceResponse" aria-live="polite">
+    <div class="ask-response-head"><strong id="askWorkspaceStatus">AI ANALYSIS</strong><span id="askWorkspaceScope">ACTIVE STATEMENT</span></div>
+    <div class="ask-workspace-question"><small>QUESTION</small><span id="askWorkspaceQuestion">—</span></div>
+    <div class="ask-intents" id="askWorkspaceIntents"></div><div class="ask-results" id="askWorkspaceResults"></div><div class="ask-answer" id="askWorkspaceAnswer"></div>
+  </div>
+</section>
+
 <div class="empty-state" id="overviewEmpty">
   <h3>No statement loaded</h3>
   <p>Upload a PDF bank statement above to activate transaction analysis, risk detection, the financial overview and FinShield AI.</p>
@@ -318,7 +586,7 @@ footer{display:flex;justify-content:space-between;color:#405c65;font-size:8px;le
     <select id="txnSeverityFilter"><option value="">All severities</option><option value="NONE">None</option><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select>
     <button id="sortDateBtn" type="button">DATE ↓</button><button id="sortAmountBtn" type="button">AMOUNT</button>
   </div>
-  <div class="table-wrap"><table><thead><tr><th>Date</th><th>Merchant</th><th>Category</th><th>Amount</th><th>Risk</th><th>Status</th></tr></thead><tbody id="txnTableBody"><tr><td colspan="6" style="text-align:center;padding:40px;color:#5d7881">No statement loaded yet.</td></tr></tbody></table></div>
+  <div class="table-wrap"><table><thead><tr><th>Date</th><th>Merchant</th><th>Category</th><th>Amount</th><th>Risk</th><th>Status</th><th>Statement</th></tr></thead><tbody id="txnTableBody"><tr><td colspan="7" style="text-align:center;padding:40px;color:#5d7881">No transaction history loaded yet.</td></tr></tbody></table></div>
 </div>
 
 <div class="view" id="view-unusual">
@@ -331,6 +599,16 @@ footer{display:flex;justify-content:space-between;color:#405c65;font-size:8px;le
   <div class="analytics-grid" id="analyticsGrid"><div class="empty-state"><h3>No statement loaded</h3><p>Upload a bank statement to see category and risk analytics.</p></div></div>
 </div>
 
+<section class="history-band" aria-label="Global transaction history summary">
+  <div class="history-heading"><span>GLOBAL HISTORY</span><small>ALL STORED STATEMENTS</small></div>
+  <div class="history-stats">
+    <div class="history-stat"><small>TRANSACTIONS ACROSS STATEMENTS</small><strong id="historyCount">0</strong></div>
+    <div class="history-stat"><small>TOTAL SPENDING ACROSS STATEMENTS</small><strong id="historyTotal">₹0</strong></div>
+    <div class="history-stat"><small>AVERAGE ACROSS STATEMENTS</small><strong id="historyAverage">₹0</strong></div>
+    <div class="history-stat"><small>STORED STATEMENTS</small><strong id="historyStatements">0</strong></div>
+  </div>
+</section>
+
 <footer><span>FINSHIELD / FINANCIAL THREAT INTELLIGENCE</span><span>TRANSACTION VALUES FROM LIVE ANALYSIS • VISUALS ARE INDICATIVE</span></footer>
 </main>
 
@@ -340,6 +618,26 @@ footer{display:flex;justify-content:space-between;color:#405c65;font-size:8px;le
   <button data-view="unusual" aria-label="Unusual activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7V12L15 14"/></svg></button>
   <button data-view="analytics" aria-label="Analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V11"/><path d="M10 19V5"/><path d="M16 19V8"/><path d="M22 19V3"/></svg></button>
 </nav>
+
+<div class="vault-backdrop" id="vaultBackdrop"></div>
+<aside class="vault-drawer" id="vaultDrawer" aria-label="Saved statement vault" aria-hidden="true">
+  <div class="vault-head">
+    <div>
+      <b>STATEMENT VAULT</b>
+      <small>Your analyzed statements are persisted in MongoDB Atlas. Open one to restore its saved transactions and analysis without re-uploading the PDF.</small>
+    </div>
+    <button class="ask-close" id="vaultCloseBtn" type="button" aria-label="Close statement vault">×</button>
+  </div>
+  <div class="vault-body">
+    <button class="vault-refresh" id="vaultRefreshBtn" type="button">↻ REFRESH SAVED STATEMENTS</button>
+    <div class="vault-list" id="vaultList">
+      <div class="vault-empty">Loading saved statements…</div>
+    </div>
+  </div>
+  <div class="vault-foot">
+    <div class="vault-foot-note">Selecting a saved statement changes the active analysis context for Overview, Transactions, Unusual Activity, Analytics and Ask FinShield.</div>
+  </div>
+</aside>
 
 <div class="status-note" id="statusNote" role="status" aria-live="polite"></div>
 <div class="ask-modal" id="askModal" role="dialog" aria-modal="true" aria-label="FinShield AI response">
@@ -358,12 +656,13 @@ footer{display:flex;justify-content:space-between;color:#405c65;font-size:8px;le
 
 <script>
 const API_BASE="";
-const state={transactions:[],overview:null,statementLoaded:false,isUploading:false,isAsking:false,isLoadingOverview:false,currentView:"overview",txnSort:{key:"date",dir:"desc"}};
+const state={transactions:[],globalTransactions:[],overview:null,globalHistory:null,statementLoaded:false,isUploading:false,isAsking:false,isLoadingOverview:false,isLoadingGlobalHistory:false,globalHistoryLoaded:false,currentView:"overview",txnSort:{key:"date",dir:"desc"},currentStatementId:null,vault:[],isLoadingVault:false};
 const el=id=>document.getElementById(id);
 const file=el("file"),dropZone=el("dropZone"),uploadButton=el("uploadButton"),uploadText=el("uploadText"),uploadIcon=el("uploadIcon");
 const fileNameWrap=el("fileNameWrap"),fileName=el("fileName"),resetBtn=el("resetBtn");
-const askInput=el("askInput"),askSubmitBtn=el("askSubmitBtn"),askNavBtn=el("askNavBtn"),askModal=el("askModal"),askAnswer=el("askAnswer"),askClose=el("askClose"),askQuestionText=el("askQuestionText"),askIntents=el("askIntents"),askResults=el("askResults"),askStatusLabel=el("askStatusLabel"),statusNote=el("statusNote");
+const askInput=el("askInput"),askSubmitBtn=el("askSubmitBtn"),askNavBtn=el("askNavBtn"),askModal=el("askModal"),askAnswer=el("askAnswer"),askClose=el("askClose"),askQuestionText=el("askQuestionText"),askIntents=el("askIntents"),askResults=el("askResults"),askStatusLabel=el("askStatusLabel"),askWorkspace=el("askWorkspace"),askWorkspaceInput=el("askWorkspaceInput"),askWorkspaceSubmitBtn=el("askWorkspaceSubmitBtn"),askWorkspaceResponse=el("askWorkspaceResponse"),askWorkspaceQuestion=el("askWorkspaceQuestion"),askWorkspaceIntents=el("askWorkspaceIntents"),askWorkspaceResults=el("askWorkspaceResults"),askWorkspaceAnswer=el("askWorkspaceAnswer"),askWorkspaceStatus=el("askWorkspaceStatus"),askWorkspaceScope=el("askWorkspaceScope"),askContextName=el("askContextName"),statusNote=el("statusNote");
 const systemStatus=el("systemStatus"),systemDot=el("systemDot"),statementStatus=el("statementStatus"),radar=el("radar"),securityCore=el("securityCore"),coreStatus=el("coreStatus"),scoreRing=el("scoreRing"),threatNumber=el("threatNumber"),threatLabel=el("threatLabel"),riskStatus=el("riskStatus"),riskSub=el("riskSub"),anomalySignal=el("anomalySignal"),amountSignal=el("amountSignal"),merchantSignal=el("merchantSignal"),documentSignal=el("documentSignal"),actionCard=el("actionCard"),actionIcon=el("actionIcon"),actionLabel=el("actionLabel"),actionText=el("actionText"),overviewStats=el("overviewStats"),overviewLower=el("overviewLower"),overviewEmpty=el("overviewEmpty");
+const vaultToggleBtn=el("vaultToggleBtn"),vaultCount=el("vaultCount"),vaultDrawer=el("vaultDrawer"),vaultBackdrop=el("vaultBackdrop"),vaultCloseBtn=el("vaultCloseBtn"),vaultRefreshBtn=el("vaultRefreshBtn"),vaultList=el("vaultList");
 let noticeTimer=null;
 
 function showNotice(message,isError=false){statusNote.textContent=message;statusNote.classList.toggle("error",isError);statusNote.classList.add("show");clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>statusNote.classList.remove("show"),4200)}
@@ -384,7 +683,7 @@ function switchView(view){
     if(active)btn.setAttribute("aria-current","page");else btn.removeAttribute("aria-current");
   });
   document.querySelectorAll(".mobile-nav-toggle button").forEach(btn=>btn.classList.toggle("active",btn.dataset.view===view));
-  if(view==="transactions")renderTransactions();if(view==="unusual")renderUnusualTransactions();if(view==="analytics")renderAnalytics();
+  if(view==="transactions"){if(!state.globalHistoryLoaded)loadGlobalHistory();else renderTransactions()}if(view==="unusual")renderUnusualTransactions();if(view==="analytics")renderAnalytics();
 }
 document.querySelectorAll(".nav[data-view],.mobile-nav-toggle button[data-view]").forEach(btn=>btn.addEventListener("click",()=>switchView(btn.dataset.view)));
 askNavBtn.addEventListener("click",()=>{askInput.focus();window.scrollTo({top:0,behavior:"smooth"})});
@@ -406,11 +705,11 @@ async function uploadStatement(selectedFile){
     setTimeout(()=>{if(state.isUploading)uploadText.textContent="ANALYZING TRANSACTIONS..."},900);
     const response=await fetch(`${API_BASE}/upload`,{method:"POST",body:formData});const data=await parseJsonSafe(response);
     if(!response.ok)throw new Error(friendlyErrorMessage(response,data));if(!data)throw new Error("The server returned an empty response.");
-    state.transactions=data.transactions||[];state.statementLoaded=true;setUploadState(false,"STATEMENT ANALYZED");
-    fileNameWrap.style.display="flex";fileName.textContent=`✓ ${selectedFile.name} · ${data.transaction_count??state.transactions.length} transactions`;
+    state.transactions=data.transactions||[];state.statementLoaded=true;state.currentStatementId=data.statement_id||null;setUploadState(false,"STATEMENT ANALYZED");
+    fileNameWrap.style.display="flex";fileName.textContent=`✓ ${selectedFile.name} · ${data.transaction_count??state.transactions.length} transactions`;updateAskContext(selectedFile.name);
     statementStatus.textContent="STATEMENT LOADED";systemStatus.textContent="SYSTEM ONLINE";updateRiskPanel();populateTxnFilters();
     showNotice(`Statement analyzed successfully — ${data.transaction_count??state.transactions.length} transactions found.`);
-    await loadOverview();renderTransactions();renderUnusualTransactions();renderAnalytics();
+    await loadOverview();await loadGlobalHistory();renderTransactions();renderUnusualTransactions();renderAnalytics();
   }catch(error){
     state.statementLoaded=false;uploadButton.classList.add("error");setUploadState(false,"SCAN FAILED");coreStatus.textContent="AWAITING STATEMENT";systemStatus.textContent="SYSTEM ONLINE";showNotice(error.message||"Unable to upload the statement.",true)
   }
@@ -422,11 +721,131 @@ file.addEventListener("change",()=>{if(file.files.length)handleFileSelected(file
 dropZone.addEventListener("drop",e=>{const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)handleFileSelected(f)});
 resetBtn.addEventListener("click",resetDashboard);
 
+/* ---------- PERSISTENT STATEMENT VAULT ---------- */
+
+function openVault(){
+  vaultDrawer.classList.add("show");
+  vaultDrawer.setAttribute("aria-hidden","false");
+  vaultBackdrop.classList.add("show");
+  loadSavedStatements();
+}
+function closeVault(){
+  vaultDrawer.classList.remove("show");
+  vaultDrawer.setAttribute("aria-hidden","true");
+  vaultBackdrop.classList.remove("show");
+}
+
+vaultToggleBtn.addEventListener("click",openVault);
+vaultCloseBtn.addEventListener("click",closeVault);
+vaultBackdrop.addEventListener("click",closeVault);
+vaultRefreshBtn.addEventListener("click",()=>loadSavedStatements());
+
+async function loadSavedStatements(autoRestore=true){
+  if(state.isLoadingVault)return;
+  state.isLoadingVault=true;
+  vaultList.innerHTML='<div class="vault-empty">Loading saved statements…</div>';
+  try{
+    const response=await fetch(`${API_BASE}/files`);
+    const data=await parseJsonSafe(response);
+    if(!response.ok)throw new Error(friendlyErrorMessage(response,data));
+    state.vault=Array.isArray(data?.files)?data.files:[];
+    vaultCount.style.display=state.vault.length?"grid":"none";
+    vaultCount.textContent=state.vault.length;
+    renderVaultList();
+
+    if(autoRestore && state.vault.length && !state.statementLoaded){
+      await loadStoredStatement(state.vault[0].statement_id);
+    }
+  }catch(error){
+    state.vault=[];
+    vaultCount.style.display="none";
+    vaultList.innerHTML=`<div class="vault-empty">Unable to load saved statements.<br><br>${escapeHtml(error.message||"Please try again.")}</div>`;
+  }finally{
+    state.isLoadingVault=false;
+  }
+}
+
+function renderVaultList(){
+  if(!state.vault.length){
+    vaultList.innerHTML='<div class="vault-empty">No analyzed statements are stored yet.<br><br>Upload a PDF to create your first financial file.</div>';
+    return;
+  }
+
+  vaultList.innerHTML=state.vault.map(item=>{
+    const active=item.statement_id===state.currentStatementId;
+    const unusual=Number(item.potentially_unusual_count||0);
+    return `
+      <div class="vault-card ${active?"active":""}" data-statement-id="${escapeHtml(item.statement_id)}" role="button" tabindex="0" aria-label="Open ${escapeHtml(item.filename||"statement")}">
+        <div class="vault-card-top">
+          <div style="min-width:0">
+            <div class="vault-card-name">${escapeHtml(item.filename||"Untitled statement")}</div>
+            <div class="vault-card-date">${formatDate(item.uploaded_at)}</div>
+          </div>
+          <div class="vault-card-amount">${formatCurrency(item.total_spending||0)}</div>
+        </div>
+        <div class="vault-card-meta">
+          <span class="vault-chip">${escapeHtml(String(item.transaction_count??0))} TRANSACTIONS</span>
+          <span class="vault-chip ${unusual?"warn":""}">${unusual?`${unusual} UNUSUAL`:`NO UNUSUAL`}</span>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+async function loadStoredStatement(statementId){
+  try{
+    vaultList.querySelectorAll(".vault-card").forEach(card=>card.classList.toggle("active",card.dataset.statementId===statementId));
+    const response=await fetch(`${API_BASE}/files/${encodeURIComponent(statementId)}`);
+    const data=await parseJsonSafe(response);
+    if(!response.ok)throw new Error(friendlyErrorMessage(response,data));
+    if(!data?.statement)throw new Error("Saved statement data was empty.");
+
+    state.currentStatementId=statementId;
+    state.transactions=data.transactions||[];
+    state.overview={
+      transaction_count:data.statement.transaction_count??state.transactions.length,
+      total_spending:data.summary?.total_spending??0,
+      average_transaction:state.transactions.length?(Number(data.summary?.total_spending||0)/state.transactions.length):0,
+      largest_transaction:data.summary?.largest_transaction||null,
+      category_spending:data.summary?.category_spending||{},
+      potentially_unusual_count:data.summary?.potentially_unusual_count??0
+    };
+    state.statementLoaded=true;
+
+    fileNameWrap.style.display="flex";
+    fileName.textContent=`✓ ${data.statement.filename||"Saved statement"} · ${state.transactions.length} transactions`;updateAskContext(data.statement.filename||"Saved statement");
+    uploadText.textContent="SCAN ANOTHER STATEMENT";
+    statementStatus.textContent="SAVED STATEMENT LOADED";
+    systemStatus.textContent="SYSTEM ONLINE";
+    updateRiskPanel();
+    populateTxnFilters();
+    renderOverview(state.overview);
+    renderTransactions();
+    renderUnusualTransactions();
+    renderAnalytics();
+    renderVaultList();
+
+    showNotice(`Restored ${data.statement.filename||"saved statement"} from FinShield Vault.`);
+    closeVault();
+  }catch(error){
+    showNotice(error.message||"Unable to open the saved statement.",true);
+  }
+}
+
+vaultList.addEventListener("click",e=>{
+  const card=e.target.closest(".vault-card");
+  if(card)loadStoredStatement(card.dataset.statementId);
+});
+vaultList.addEventListener("keydown",e=>{
+  const card=e.target.closest(".vault-card");
+  if(card && (e.key==="Enter"||e.key===" ")){e.preventDefault();loadStoredStatement(card.dataset.statementId)}
+});
+
+function updateAskContext(filename){askContextName.textContent=filename||"UPLOAD A STATEMENT TO BEGIN";askWorkspace.classList.toggle("is-inactive",!state.statementLoaded);askWorkspaceInput.disabled=!state.statementLoaded;askWorkspaceSubmitBtn.disabled=!state.statementLoaded;document.querySelectorAll("[data-ask-question]").forEach(btn=>btn.disabled=!state.statementLoaded)}
 function resetDashboard(){
-  state.transactions=[];state.overview=null;state.statementLoaded=false;file.value="";fileNameWrap.style.display="none";uploadText.textContent="SCAN BANK STATEMENT";uploadButton.classList.remove("error");
+  state.transactions=[];state.overview=null;state.statementLoaded=false;state.currentStatementId=null;file.value="";fileNameWrap.style.display="none";uploadText.textContent="SCAN BANK STATEMENT";uploadButton.classList.remove("error");
   statementStatus.textContent="WAITING FOR STATEMENT";coreStatus.textContent="AWAITING STATEMENT";securityCore.classList.remove("attention");radar.classList.remove("alert");threatNumber.firstChild.textContent="—";threatLabel.textContent="WAITING";scoreRing.style.background="conic-gradient(var(--green) 0%,#122f39 0%)";riskStatus.textContent="Upload a statement to analyze";riskStatus.classList.remove("attention");
   [anomalySignal,amountSignal,merchantSignal,documentSignal].forEach(s=>{s.textContent="—";s.className="sig-status sig-none"});actionCard.classList.remove("attention");actionIcon.textContent="✓";actionLabel.textContent="FINSHIELD STATUS";actionText.textContent="Upload a statement to begin analysis.";
-  document.querySelectorAll(".node").forEach(n=>n.classList.remove("flag","dim"));overviewStats.style.display="none";overviewLower.style.display="none";overviewEmpty.style.display="block";switchView("overview")
+  document.querySelectorAll(".node").forEach(n=>n.classList.remove("flag","dim"));overviewStats.style.display="none";overviewLower.style.display="none";overviewEmpty.style.display="block";askWorkspaceResponse.classList.remove("show");askWorkspace.classList.remove("has-response");askWorkspaceQuestion.textContent="—";askWorkspaceAnswer.textContent="";updateAskContext("");switchView("overview")
 }
 function updateRiskPanel(){
   const tx=state.transactions,unusual=tx.filter(t=>severityRank(t.severity)>=severityRank("MEDIUM"));const maxSeverity=tx.reduce((h,t)=>severityRank(t.severity)>severityRank(h)?t.severity:h,"NONE");const maxRisk=tx.reduce((h,t)=>Math.max(h,Number(t.risk_score||0)),0);
@@ -459,16 +878,46 @@ function renderOverview(data){
   if(largest){el("lcMerchant").textContent=largest.merchant||"Unknown merchant";el("lcDate").textContent=formatDate(largest.date);el("lcAmount").textContent=formatCurrency(largest.amount);const chips=el("lcChips");chips.innerHTML="";if(largest.severity&&largest.severity!=="NONE")chips.innerHTML+=`<span class="chip warn">${escapeHtml(largest.severity)} RISK</span>`;if(largest.category)chips.innerHTML+=`<span class="chip">${escapeHtml(largest.category)}</span>`;if(Array.isArray(largest.signals))largest.signals.forEach(s=>chips.innerHTML+=`<span class="chip warn">${escapeHtml(String(s).toUpperCase())}</span>`)}
 }
 
-function populateTxnFilters(){const select=el("txnCategoryFilter"),cats=[...new Set(state.transactions.map(t=>t.category).filter(Boolean))].sort();select.innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("")}
+async function loadGlobalHistory(){
+  if(state.isLoadingGlobalHistory)return;
+  state.isLoadingGlobalHistory=true;
+  try{
+    const [transactionsResponse,summaryResponse]=await Promise.all([
+      fetch(`${API_BASE}/transactions`),
+      fetch(`${API_BASE}/history-summary`),
+    ]);
+    const transactionsData=await parseJsonSafe(transactionsResponse);
+    const summaryData=await parseJsonSafe(summaryResponse);
+    if(!transactionsResponse.ok)throw new Error(friendlyErrorMessage(transactionsResponse,transactionsData));
+    if(!summaryResponse.ok)throw new Error(friendlyErrorMessage(summaryResponse,summaryData));
+    state.globalTransactions=Array.isArray(transactionsData?.transactions)?transactionsData.transactions:[];
+    state.globalHistory=summaryData||null;
+    state.globalHistoryLoaded=true;
+    populateTxnFilters();
+    renderGlobalHistory();
+    renderTransactions();
+  }catch(error){
+    state.globalHistoryLoaded=false;
+    showNotice(error.message||"Unable to load transaction history.",true);
+  }finally{state.isLoadingGlobalHistory=false}
+}
+function renderGlobalHistory(){
+  const summary=state.globalHistory||{};
+  el("historyCount").textContent=summary.transaction_count??0;
+  el("historyTotal").textContent=formatCurrency(summary.total_spending??0);
+  el("historyAverage").textContent=formatCurrency(summary.average_transaction??0);
+  el("historyStatements").textContent=summary.statement_count??0;
+}
+function populateTxnFilters(){const select=el("txnCategoryFilter"),cats=[...new Set(state.globalTransactions.map(t=>t.category).filter(Boolean))].sort();select.innerHTML='<option value="">All categories</option>'+cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("")}
 function getFilteredSortedTransactions(){
   const search=el("txnSearch").value.trim().toLowerCase(),category=el("txnCategoryFilter").value,severity=el("txnSeverityFilter").value;
-  let rows=state.transactions.filter(t=>{if(search&&!(`${t.merchant||""} ${t.category||""}`.toLowerCase().includes(search)))return false;if(category&&t.category!==category)return false;if(severity&&t.severity!==severity)return false;return true});
+  let rows=state.globalTransactions.filter(t=>{if(search&&!(`${t.merchant||""} ${t.category||""} ${t.filename||""}`.toLowerCase().includes(search)))return false;if(category&&t.category!==category)return false;if(severity&&t.severity!==severity)return false;return true});
   const {key,dir}=state.txnSort;return rows.sort((a,b)=>{const av=key==="date"?(new Date(a.date).getTime()||0):Number(a.amount||0),bv=key==="date"?(new Date(b.date).getTime()||0):Number(b.amount||0);return dir==="asc"?av-bv:bv-av})
 }
 function renderTransactions(){
-  const body=el("txnTableBody");if(!state.statementLoaded){body.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:#5d7881">No statement loaded yet — upload a statement from Overview.</td></tr>';el("txnCountLabel").textContent="0 transactions";return}
-  const rows=getFilteredSortedTransactions();el("txnCountLabel").textContent=`${rows.length} of ${state.transactions.length} transactions`;if(!rows.length){body.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:#5d7881">No transactions match your filters.</td></tr>';return}
-  body.innerHTML=rows.map(t=>`<tr><td>${formatDate(t.date)}</td><td>${escapeHtml(t.merchant||"Unknown")}</td><td>${escapeHtml(t.category||"Other")}</td><td>${formatCurrency(t.amount)}</td><td>${t.risk_score??"—"}</td><td><span class="badge ${badgeClass(t.severity)}">${escapeHtml(t.severity||"NONE")}</span></td></tr>`).join("")
+  const body=el("txnTableBody");if(!state.globalHistoryLoaded){body.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:#5d7881">Loading stored transaction history...</td></tr>';el("txnCountLabel").textContent="Loading history";return}
+  const rows=getFilteredSortedTransactions();el("txnCountLabel").textContent=`${rows.length} of ${state.globalTransactions.length} transactions`;if(!rows.length){body.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:#5d7881">No transactions match your filters.</td></tr>';return}
+  body.innerHTML=rows.map(t=>`<tr><td>${formatDate(t.date)}</td><td>${escapeHtml(t.merchant||"Unknown")}</td><td>${escapeHtml(t.category||"Other")}</td><td>${formatCurrency(t.amount)}</td><td>${t.risk_score??"—"}</td><td><span class="badge ${badgeClass(t.severity)}">${escapeHtml(t.severity||"NONE")}</span></td><td>${escapeHtml(t.filename||t.statement_id||"Unknown statement")}</td></tr>`).join("")
 }
 ["txnSearch","txnCategoryFilter","txnSeverityFilter"].forEach(id=>el(id).addEventListener("input",renderTransactions));
 function bindSort(id,key){el(id).addEventListener("click",()=>{if(state.txnSort.key===key)state.txnSort.dir=state.txnSort.dir==="asc"?"desc":"asc";else{state.txnSort.key=key;state.txnSort.dir="desc"}document.querySelectorAll(".toolbar button").forEach(b=>b.classList.remove("active-sort"));el(id).classList.add("active-sort");el(id).textContent=`${key.toUpperCase()} ${state.txnSort.dir==="asc"?"↑":"↓"}`;renderTransactions()})}
@@ -487,43 +936,54 @@ function renderAnalytics(){
   grid.innerHTML=`<div class="panel-card"><div class="card-heading"><span>SPENDING BY CATEGORY</span><span>${entries.length} categories</span></div>${entries.length?entries.map(([n,v])=>`<div class="category-row"><div class="cat-label">${escapeHtml(n)}</div><div class="cat-track"><div class="cat-fill" style="width:${Math.max(4,Math.round(Number(v)/maxCat*100))}%"></div></div><div class="cat-val">${formatCurrency(v)}</div></div>`).join(""):'<div class="risk-sub" style="text-align:left;margin-top:16px">No category data available.</div>'}</div><div class="panel-card"><div class="card-heading"><span>TRANSACTIONS BY SEVERITY</span><span>${state.transactions.length} total</span></div>${Object.entries(counts).map(([s,c])=>`<div class="category-row"><div class="cat-label">${s}</div><div class="cat-track"><div class="cat-fill" style="width:${Math.round(c/maxSev*100)}%;background:${s==="NONE"?"var(--green)":s==="LOW"?"var(--cyan)":s==="MEDIUM"?"var(--amber)":"var(--red)"}"></div></div><div class="cat-val">${c}</div></div>`).join("")}</div>`
 }
 
-function setAskLoading(){askStatusLabel.textContent="ANALYZING";askIntents.innerHTML="";askResults.innerHTML="";askAnswer.innerHTML='<div class="ask-loading"><div class="spinner"></div>FinShield is analyzing your statement...</div>'}
+function setAskLoading(){askStatusLabel.textContent="ANALYZING";askIntents.innerHTML="";askResults.innerHTML="";askAnswer.innerHTML='<div class="ask-loading"><div class="spinner"></div>FinShield is analyzing your statement...</div>';askWorkspaceStatus.textContent="ANALYZING STATEMENT";askWorkspaceIntents.innerHTML="";askWorkspaceResults.innerHTML="";askWorkspaceAnswer.innerHTML='<div class="ask-loading"><div class="spinner"></div>Analyzing statement...</div>';askWorkspaceResponse.classList.add("show");askWorkspace.classList.add("has-response");askWorkspaceQuestion.textContent=askWorkspaceInput.value||askQuestionText.textContent;askInput.disabled=true;askWorkspaceInput.disabled=true;askSubmitBtn.disabled=true;askWorkspaceSubmitBtn.disabled=true;document.querySelectorAll("[data-ask-question]").forEach(btn=>btn.disabled=true)}
 async function askFinShield(question){
   if(state.isAsking)return;if(!state.statementLoaded){showNotice("Upload a bank statement before asking FinShield.",true);return}
-  state.isAsking=true;askQuestionText.textContent=question;setAskLoading();askModal.classList.add("show");askClose.focus();
+  state.isAsking=true;askQuestionText.textContent=question;askWorkspaceQuestion.textContent=question;setAskLoading();askModal.classList.add("show");askClose.focus();
   try{const response=await fetch(`${API_BASE}/ask`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question,top_k:3})});const data=await parseJsonSafe(response);if(!response.ok)throw new Error(friendlyErrorMessage(response,data));if(!data)throw new Error("No response was returned.");showAiResponse(data)}
-  catch(error){askStatusLabel.textContent="ERROR";askAnswer.textContent=error.message||"Unable to reach FinShield."}
-  finally{state.isAsking=false}
+  catch(error){askStatusLabel.textContent="ERROR";askAnswer.textContent=error.message||"Unable to reach FinShield.";askWorkspaceStatus.textContent="ANALYSIS ERROR";askWorkspaceAnswer.textContent=error.message||"Unable to reach FinShield."}
+  finally{state.isAsking=false;askInput.disabled=false;askWorkspaceInput.disabled=!state.statementLoaded;askSubmitBtn.disabled=false;askWorkspaceSubmitBtn.disabled=!state.statementLoaded;document.querySelectorAll("[data-ask-question]").forEach(btn=>btn.disabled=!state.statementLoaded)}
 }
 
 function showAiResponse(data){
   askStatusLabel.textContent="ANALYSIS COMPLETE";
   const intents=data.intents||data.detected_intents||[];
-  askIntents.innerHTML=intents.length?intents.map(i=>`<span class="chip">${escapeHtml(String(i).replace(/_/g," ").toUpperCase())}</span>`).join(""):"";
+  const intentMarkup=intents.length?intents.map(i=>`<span class="chip">${escapeHtml(String(i).replace(/_/g," ").toUpperCase())}</span>`).join(""):"";askIntents.innerHTML=intentMarkup;askWorkspaceIntents.innerHTML=intentMarkup;
 
   /* FIX: backend returns computed_results */
   const results=data.computed_results||data.calculated_results||data.results||null;
-  askResults.innerHTML="";
+  askResults.innerHTML="";askWorkspaceResults.innerHTML="";const appendResult=markup=>{askResults.innerHTML+=markup;askWorkspaceResults.innerHTML+=markup};
   if(results&&typeof results==="object"){
     if(results.largest_transaction){
       const tx=results.largest_transaction;
-      askResults.innerHTML+=`<div class="ask-result-item"><small>LARGEST TRANSACTION</small><strong>${formatCurrency(tx.amount)}</strong><div class="risk-sub" style="text-align:left;margin-top:6px">${escapeHtml(tx.merchant||"Unknown merchant")} · ${escapeHtml(formatDate(tx.date))}</div></div>`;
+      appendResult(`<div class="ask-result-item"><small>LARGEST TRANSACTION</small><strong>${formatCurrency(tx.amount)}</strong><div class="risk-sub" style="text-align:left;margin-top:6px">${escapeHtml(tx.merchant||"Unknown merchant")} · ${escapeHtml(formatDate(tx.date))}</div></div>`);
     }
     if(results.category_total){
       const cat=results.category_total;
-      askResults.innerHTML+=`<div class="ask-result-item"><small>${escapeHtml(String(cat.category||"CATEGORY").toUpperCase())} SPENDING</small><strong>${formatCurrency(cat.amount)}</strong></div>`;
+      appendResult(`<div class="ask-result-item"><small>${escapeHtml(String(cat.category||"CATEGORY").toUpperCase())} SPENDING</small><strong>${formatCurrency(cat.amount)}</strong></div>`);
     }
-    if(results.total_spending!==undefined)askResults.innerHTML+=`<div class="ask-result-item"><small>TOTAL SPENDING</small><strong>${formatCurrency(results.total_spending)}</strong></div>`;
-    if(results.transaction_count!==undefined)askResults.innerHTML+=`<div class="ask-result-item"><small>TRANSACTIONS</small><strong>${escapeHtml(String(results.transaction_count))}</strong></div>`;
-    if(results.potentially_unusual_count!==undefined)askResults.innerHTML+=`<div class="ask-result-item"><small>POTENTIALLY UNUSUAL</small><strong>${escapeHtml(String(results.potentially_unusual_count))}</strong></div>`;
+    if(results.total_spending!==undefined)appendResult(`<div class="ask-result-item"><small>TOTAL SPENDING</small><strong>${formatCurrency(results.total_spending)}</strong></div>`);
+    if(results.transaction_count!==undefined)appendResult(`<div class="ask-result-item"><small>TRANSACTIONS</small><strong>${escapeHtml(String(results.transaction_count))}</strong></div>`);
+    if(results.statement_count!==undefined)appendResult(`<div class="ask-result-item"><small>STATEMENTS IN VAULT</small><strong>${escapeHtml(String(results.statement_count))}</strong></div>`);
+    if(results.average_transaction!==undefined)appendResult(`<div class="ask-result-item"><small>AVERAGE TRANSACTION</small><strong>${formatCurrency(results.average_transaction)}</strong></div>`);
+    if(results.largest_transaction_percentage!==undefined)appendResult(`<div class="ask-result-item"><small>LARGEST TRANSACTION SHARE</small><strong>${escapeHtml(String(results.largest_transaction_percentage))}%</strong></div>`);
+    if(results.top_category)appendResult(`<div class="ask-result-item"><small>TOP SPENDING CATEGORY</small><strong>${escapeHtml(String(results.top_category.category||"Other"))}</strong><div class="risk-sub" style="text-align:left;margin-top:6px">${formatCurrency(results.top_category.amount)} · ${escapeHtml(String(results.top_category.percentage??0))}% of total</div></div>`);
+    if(results.potentially_unusual_count!==undefined)appendResult(`<div class="ask-result-item"><small>POTENTIALLY UNUSUAL</small><strong>${escapeHtml(String(results.potentially_unusual_count))}</strong></div>`);
   }
-  askAnswer.textContent=data.answer||"No answer was returned."
+  if(Array.isArray(data.transactions_used))appendResult(`<div class="ask-result-item"><small>TRANSACTIONS USED</small><strong>${escapeHtml(String(data.transactions_used.length))}</strong></div>`);
+  askAnswer.textContent=data.answer||"No answer was returned.";askWorkspaceStatus.textContent="AI ANALYSIS COMPLETE";askWorkspaceScope.textContent=data.scope==="global_history"?"GLOBAL HISTORY":"ACTIVE STATEMENT";askWorkspaceAnswer.textContent=data.answer||"No answer was returned.";askWorkspaceResponse.classList.add("show");askWorkspace.classList.add("has-response")
 }
-function submitAsk(){const q=askInput.value.trim();if(!q)return;askFinShield(q);askInput.value=""}
-askInput.addEventListener("keydown",e=>{if(e.key==="Enter")submitAsk()});askSubmitBtn.addEventListener("click",submitAsk);askClose.addEventListener("click",()=>askModal.classList.remove("show"));askModal.addEventListener("click",e=>{if(e.target===askModal)askModal.classList.remove("show")});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&askModal.classList.contains("show"))askModal.classList.remove("show")});
+function submitAsk(input=askInput,question=null){const q=(question??input.value).trim();if(!q)return;askFinShield(q);input.value=""}
+askInput.addEventListener("keydown",e=>{if(e.key==="Enter")submitAsk()});askSubmitBtn.addEventListener("click",()=>submitAsk());askWorkspaceInput.addEventListener("keydown",e=>{if(e.key==="Enter")submitAsk(askWorkspaceInput)});askWorkspaceSubmitBtn.addEventListener("click",()=>submitAsk(askWorkspaceInput));document.querySelectorAll("[data-ask-question]").forEach(btn=>btn.addEventListener("click",()=>{askWorkspaceInput.value=btn.dataset.askQuestion;submitAsk(askWorkspaceInput)}));askClose.addEventListener("click",()=>askModal.classList.remove("show"));askModal.addEventListener("click",e=>{if(e.target===askModal)askModal.classList.remove("show")});
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape")return;
+  if(askModal.classList.contains("show"))askModal.classList.remove("show");
+  if(vaultDrawer.classList.contains("show"))closeVault();
+});
 resetDashboard();
 fetch(`${API_BASE}/health`).catch(()=>{systemStatus.textContent="CONNECTION ISSUE";systemDot.classList.add("idle")});
+loadSavedStatements(true);
+loadGlobalHistory();
 </script>
 </body>
 </html>

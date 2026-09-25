@@ -3,6 +3,7 @@ import json
 import os
 import urllib.request
 import urllib.error
+from datetime import datetime
 from typing import List, Dict, Tuple, Optional
 
 import numpy as np
@@ -264,6 +265,7 @@ def detect_question_intents(question: str) -> List[str]:
         category_total
         unknown_payment
         unusual_transactions
+        financial_insight
         general
     """
 
@@ -307,7 +309,13 @@ def detect_question_intents(question: str) -> List[str]:
             "anomalies",
             "flagged transaction",
             "flagged transactions",
+            "was flagged",
+            "were flagged",
+            "transaction flagged",
             "weird transaction",
+            "anything look unusual",
+            "look unusual",
+            "unusual",
         ]
     ):
         intents.append("unusual_transactions")
@@ -408,6 +416,30 @@ def detect_question_intents(question: str) -> List[str]:
         intents.append("total")
 
     # --------------------------------------------------
+    # Broad financial insight
+    # --------------------------------------------------
+
+    if any(
+        phrase in q
+        for phrase in [
+            "analyze my spending",
+            "analyse my spending",
+            "analyze this statement",
+            "analyse this statement",
+            "what can you tell me about my spending",
+            "what patterns do you notice",
+            "what patterns do you see",
+            "what spending patterns",
+            "spending overview",
+            "overview of my spending",
+            "how concentrated is my spending",
+            "what stands out",
+            "something useful about my spending",
+        ]
+    ):
+        intents.append("financial_insight")
+
+    # --------------------------------------------------
     # No known intent -> general RAG
     # --------------------------------------------------
 
@@ -503,23 +535,345 @@ def find_unknown_payments(
     ]
 
 
+def calculate_financial_insight(
+    transactions: List[Dict],
+    anomalies: List[Dict],
+) -> Dict:
+    """Calculate lightweight, statement-scoped financial insight metrics."""
+    if not transactions:
+        return {
+            "transaction_count": 0,
+            "total_spending": 0.0,
+            "average_transaction": 0.0,
+            "potentially_unusual_count": 0,
+        }
+
+    amounts = [float(transaction["amount"]) for transaction in transactions]
+    total_spending = sum(amounts)
+    largest_transactions = sorted(
+        transactions,
+        key=lambda transaction: float(transaction["amount"]),
+        reverse=True,
+    )
+    largest = largest_transactions[0]
+
+    result = {
+        "transaction_count": len(transactions),
+        "total_spending": round(total_spending, 2),
+        "average_transaction": round(total_spending / len(transactions), 2),
+        "largest_transaction": {
+            "id": largest["id"],
+            "date": largest["date"],
+            "merchant": largest["merchant"],
+            "amount": round(float(largest["amount"]), 2),
+            "category": largest.get("category", "Other"),
+        },
+        "potentially_unusual_count": sum(
+            transaction.get("severity") in {"MEDIUM", "HIGH", "CRITICAL"}
+            for transaction in anomalies
+        ),
+    }
+
+    if total_spending > 0:
+        result["largest_transaction_percentage"] = round(
+            float(largest["amount"]) / total_spending * 100,
+            2,
+        )
+
+    if len(largest_transactions) > 1:
+        second_largest = largest_transactions[1]
+        result["second_largest_transaction"] = {
+            "id": second_largest["id"],
+            "date": second_largest["date"],
+            "merchant": second_largest["merchant"],
+            "amount": round(float(second_largest["amount"]), 2),
+            "category": second_largest.get("category", "Other"),
+        }
+
+    category_totals: Dict[str, float] = {}
+    for transaction in transactions:
+        category = transaction.get("category", "Other")
+        category_totals[category] = category_totals.get(category, 0.0) + float(
+            transaction["amount"]
+        )
+
+    if category_totals:
+        top_category, top_category_amount = max(
+            category_totals.items(),
+            key=lambda item: item[1],
+        )
+        result["top_category"] = {
+            "category": top_category,
+            "amount": round(top_category_amount, 2),
+            "percentage": round(
+                top_category_amount / total_spending * 100,
+                2,
+            ) if total_spending > 0 else 0.0,
+        }
+
+    merchant_counts: Dict[str, int] = {}
+    for transaction in transactions:
+        merchant = transaction["merchant"].strip()
+        merchant_counts[merchant] = merchant_counts.get(merchant, 0) + 1
+
+    repeated_merchants = [
+        {"merchant": merchant, "transaction_count": count}
+        for merchant, count in merchant_counts.items()
+        if count > 1
+    ]
+    if repeated_merchants:
+        result["repeated_merchants"] = repeated_merchants
+
+    return result
+
+
+def financial_insight_result(
+    question: str,
+    transactions: List[Dict],
+    anomalies: List[Dict],
+) -> Dict:
+    """Build an exact insight payload and send it through the existing LLM layer."""
+    metrics = calculate_financial_insight(transactions, anomalies)
+    exact_lines = [
+        f"Total spending: ₹{metrics['total_spending']:.2f}",
+        f"Transaction count: {metrics['transaction_count']}",
+        f"Average transaction: ₹{metrics['average_transaction']:.2f}",
+    ]
+
+    largest = metrics.get("largest_transaction")
+    if largest:
+        exact_lines.append(
+            f"Largest transaction: {largest['merchant']} — "
+            f"₹{largest['amount']:.2f} on {largest['date']}"
+        )
+    if "largest_transaction_percentage" in metrics:
+        exact_lines.append(
+            "Largest transaction percentage of total spending: "
+            f"{metrics['largest_transaction_percentage']:.2f}%"
+        )
+
+    top_category = metrics.get("top_category")
+    if top_category:
+        exact_lines.append(
+            f"Top spending category: {top_category['category']} — "
+            f"₹{top_category['amount']:.2f} "
+            f"({top_category['percentage']:.2f}% of total spending)"
+        )
+
+    exact_lines.append(
+        "Potentially unusual transactions: "
+        f"{metrics['potentially_unusual_count']}"
+    )
+
+    repeated_merchants = metrics.get("repeated_merchants", [])
+    if repeated_merchants:
+        exact_lines.append(
+            "Repeated merchants: "
+            + ", ".join(
+                f"{item['merchant']} ({item['transaction_count']} transactions)"
+                for item in repeated_merchants
+            )
+        )
+
+    ranked_transactions = sorted(
+        transactions,
+        key=lambda transaction: float(transaction["amount"]),
+        reverse=True,
+    )[:3]
+    answer_text = generate_answer(
+        question,
+        [(transaction, 1.0) for transaction in ranked_transactions],
+        exact_result="\n".join(exact_lines),
+        financial_insight=True,
+        financial_metrics=metrics,
+    )
+
+    return {
+        "question": question,
+        "intent": "financial_insight",
+        "scope": "active_statement",
+        "intents": ["financial_insight"],
+        "answer": answer_text,
+        "computed_results": metrics,
+        "transactions_used": [
+            {
+                "id": transaction["id"],
+                "date": transaction["date"],
+                "merchant": transaction["merchant"],
+                "amount": transaction["amount"],
+                "category": transaction.get("category", "Other"),
+            }
+            for transaction in ranked_transactions
+        ],
+    }
+
+
 # --------------------------------------------------
 # 11. OpenRouter explanation
 # --------------------------------------------------
+
+def build_financial_insight_fallback(metrics: Dict) -> str:
+    """Render a readable insight from metrics calculated by Python."""
+    transaction_count = metrics.get("transaction_count", 0)
+    total_spending = metrics.get("total_spending", 0.0)
+    average_transaction = metrics.get("average_transaction", 0.0)
+
+    lines = [
+        "Spending Overview",
+        "",
+        f"You spent ₹{total_spending:,.2f} across "
+        f"{transaction_count} transactions, with an average transaction of "
+        f"₹{average_transaction:,.2f}.",
+    ]
+
+    top_category = metrics.get("top_category")
+    if top_category:
+        lines.extend([
+            "",
+            "Key pattern:",
+            f"The {top_category['category']} category accounts for "
+            f"₹{top_category['amount']:,.2f}, or "
+            f"{top_category['percentage']:.2f}% of total spending.",
+        ])
+
+    largest = metrics.get("largest_transaction")
+    if largest:
+        largest_line = (
+            f"Your largest transaction was ₹{largest['amount']:,.2f} to "
+            f"{largest['merchant']}"
+        )
+        largest_percentage = metrics.get("largest_transaction_percentage")
+        if largest_percentage is not None:
+            largest_line += (
+                f", representing {largest_percentage:.2f}% of total spending."
+            )
+        else:
+            largest_line += "."
+        lines.extend(["", "Largest payment:", largest_line])
+
+    repeated_merchants = metrics.get("repeated_merchants", [])
+    if repeated_merchants:
+        merchant_summary = ", ".join(
+            f"{item['merchant']} appears in {item['transaction_count']} "
+            "transactions"
+            for item in repeated_merchants
+        )
+        lines.extend(["", "Merchant pattern:", merchant_summary + "."])
+
+    unusual_count = metrics.get("potentially_unusual_count", 0)
+    if unusual_count == 1:
+        review_line = (
+            "1 transaction was identified as potentially unusual and may be "
+            "worth reviewing."
+        )
+    else:
+        review_line = (
+            f"{unusual_count} transactions were identified as potentially "
+            "unusual and may be worth reviewing."
+        )
+    lines.extend(["", "Review signal:", review_line])
+
+    return "\n".join(lines)
+
+
+def _format_anomaly_date(value: object) -> str:
+    date_text = str(value)
+    for date_format in (
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+    ):
+        try:
+            return datetime.strptime(date_text, date_format).strftime("%d %b %Y")
+        except ValueError:
+            continue
+    return date_text
+
+
+def _format_anomaly_signal(signal: object) -> str:
+    return str(signal).replace("_", " ").capitalize()
+
+
+def build_anomaly_fallback(
+    transactions: List[Dict],
+    detailed: bool = False,
+) -> str:
+    """Render anomaly evidence without adding analysis beyond stored fields."""
+    if detailed and len(transactions) == 1:
+        transaction = transactions[0]
+        lines = [
+            "Potentially unusual transaction",
+            "",
+            f"₹{float(transaction['amount']):,.2f} at "
+            f"{transaction['merchant']} on "
+            f"{_format_anomaly_date(transaction['date'])}",
+            "",
+            f"Risk: {transaction['severity']}",
+            f"Risk score: {transaction['risk_score']}",
+            f"Signals: {', '.join(_format_anomaly_signal(signal) for signal in transaction.get('signals', []))}",
+            "",
+            "Why it was flagged:",
+        ]
+        lines.extend(
+            f"• {reason}"
+            for reason in transaction.get("reasons", [])
+        )
+        lines.extend(["", "Review " "recommended: verify that the transaction was expected."])
+        return "\n".join(lines)
+
+    count = len(transactions)
+    lines = [
+        f"Potentially unusual activity was identified "
+        f"in {count} "
+        f"transaction{'s' if count != 1 else ''}.",
+    ]
+
+    for transaction in transactions:
+        lines.extend([
+            "",
+            f"• {transaction['merchant']} — ₹{float(transaction['amount']):,.2f} "
+            f"on {_format_anomaly_date(transaction['date'])}",
+            f"  Risk: {transaction['severity']} (score {transaction['risk_score']})",
+            "  Signals: "
+            + ", ".join(
+                _format_anomaly_signal(signal)
+                for signal in transaction.get("signals", [])
+            ),
+            "  Reasons:",
+        ])
+        lines.extend(
+            f"  • {reason}"
+            for reason in transaction.get("reasons", [])
+        )
+
+    lines.extend(["", "Review " "recommended: verify that the transaction was expected."])
+    return "\n".join(lines)
 
 def generate_answer(
     question: str,
     retrieved_transactions: List[Tuple[Dict, float]],
     computed_total: Optional[float] = None,
     exact_result: Optional[str] = None,
+    financial_insight: bool = False,
+    financial_metrics: Optional[Dict] = None,
 ) -> str:
+
+    fallback_answer = (
+        build_financial_insight_fallback(financial_metrics)
+        if financial_insight and financial_metrics is not None
+        else exact_result
+    ) or (
+        "FinShield's AI explanation service is temporarily unavailable. "
+        "The statement data and deterministic financial analysis are still "
+        "available."
+    )
 
     api_key = os.getenv("OPENROUTER_API_KEY")
 
     if not api_key:
-        raise RuntimeError(
-            "OPENROUTER_API_KEY is not set."
-        )
+        if fallback_answer:
+            return fallback_answer
+        raise RuntimeError("OpenRouter is unavailable.")
 
     if retrieved_transactions:
         context = "\n".join(
@@ -577,6 +931,15 @@ fraudulent. Use wording such as
 "potentially unusual" when discussing anomalies.
 """
 
+    if financial_insight:
+        prompt += """
+
+For this financial insight response, explain all supplied patterns
+concisely in roughly 150-300 words. Output only the final answer; do not
+include analysis, planning, or a description of your reasoning. Finish each
+thought in a complete sentence and do not add unsupported financial values.
+"""
+
     payload = {
         "models": [
             "nvidia/nemotron-3-ultra-550b-a55b:free",
@@ -590,8 +953,14 @@ fraudulent. Use wording such as
             }
         ],
         "temperature": 0.2,
-        "max_tokens": 300,
+        "max_tokens": 450 if financial_insight else 300,
     }
+
+    if financial_insight:
+        payload["reasoning"] = {
+            "effort": "none",
+            "exclude": True,
+        }
 
     request = urllib.request.Request(
         "https://openrouter.ai/api/v1/chat/completions",
@@ -610,39 +979,39 @@ fraudulent. Use wording such as
             )
 
     except urllib.error.HTTPError as e:
-        error_body = e.read().decode("utf-8", errors="replace")
-
         # The financial calculation is already authoritative.
         # If the LLM is unavailable, return the exact Python result
         # instead of breaking the entire /ask feature.
-        if exact_result:
-            return exact_result
+        if fallback_answer:
+            return fallback_answer
 
-        raise RuntimeError(
-            f"OpenRouter API error {e.code}: {error_body}"
-        ) from e
+        raise RuntimeError("OpenRouter is unavailable.") from e
 
     except urllib.error.URLError as e:
-        if exact_result:
-            return exact_result
+        if fallback_answer:
+            return fallback_answer
 
-        raise RuntimeError(
-            f"Could not connect to OpenRouter: {e.reason}"
-        ) from e
+        raise RuntimeError("OpenRouter is unavailable.") from e
+
+    except (json.JSONDecodeError, TimeoutError, OSError) as e:
+        if fallback_answer:
+            return fallback_answer
+
+        raise RuntimeError("OpenRouter is unavailable.") from e
 
     choices = response_data.get("choices", [])
 
     if not choices:
-        raise RuntimeError(
-            f"OpenRouter returned no choices: {response_data}"
-        )
+        if fallback_answer:
+            return fallback_answer
+        raise RuntimeError("OpenRouter returned no usable answer.")
 
     answer = choices[0].get("message", {}).get("content")
 
     if not answer:
-        raise RuntimeError(
-            f"OpenRouter returned an empty answer: {response_data}"
-        )
+        if fallback_answer:
+            return fallback_answer
+        raise RuntimeError("OpenRouter returned no usable answer.")
 
     return answer.strip()
 
@@ -804,11 +1173,38 @@ class StatementSession:
                     exact_lines.append(
                         f"Found {len(flagged)} potentially unusual transaction(s)."
                     )
+                    exact_lines.append(build_anomaly_fallback(flagged))
                     selected_transactions.extend(flagged)
                 else:
                     exact_lines.append(
                         "No potentially unusual transactions were detected."
                     )
+
+            if "financial_insight" in intents:
+                insight_metrics = calculate_financial_insight(
+                    self.transactions,
+                    self.anomalies,
+                )
+                computed_results.update(insight_metrics)
+                exact_lines.extend([
+                    f"Total spending: ₹{insight_metrics['total_spending']:.2f}",
+                    f"Average transaction: ₹{insight_metrics['average_transaction']:.2f}",
+                    "Potentially unusual transactions: "
+                    f"{insight_metrics['potentially_unusual_count']}",
+                ])
+                insight_largest = insight_metrics.get("largest_transaction")
+                if insight_largest:
+                    exact_lines.append(
+                        f"Largest transaction: {insight_largest['merchant']} — "
+                        f"₹{insight_largest['amount']:.2f}"
+                    )
+                selected_transactions.extend(
+                    sorted(
+                        self.transactions,
+                        key=lambda transaction: float(transaction["amount"]),
+                        reverse=True,
+                    )[:3]
+                )
 
             # Remove duplicate transactions while preserving insertion order.
             unique_transactions = {}
@@ -823,11 +1219,16 @@ class StatementSession:
                 question,
                 [(transaction, 1.0) for transaction in selected_transactions],
                 exact_result=exact_result,
+                financial_insight="financial_insight" in intents,
+                financial_metrics=insight_metrics
+                if "financial_insight" in intents
+                else None,
             )
 
             return {
                 "question": question,
                 "intent": "multiple",
+                "scope": "active_statement",
                 "intents": intents,
                 "answer": answer_text,
                 "computed_results": computed_results,
@@ -848,6 +1249,17 @@ class StatementSession:
         # --------------------------------------------------
 
         intent = intents[0]
+
+        # --------------------------------------------------
+        # CASE 0 — Financial insight
+        # --------------------------------------------------
+
+        if intent == "financial_insight":
+            return financial_insight_result(
+                question,
+                self.transactions,
+                self.anomalies,
+            )
 
         # --------------------------------------------------
         # CASE 1 — Overall total
@@ -1084,23 +1496,32 @@ class StatementSession:
                     "question": question,
                     "intent": intent,
                     "answer": (
-                        "No potentially unusual transactions were detected."
+                        "No potentially unusual transactions were identified "
+                        "in this statement based on the current risk signals."
                     ),
                     "computed_total": None,
                     "transactions_used": [],
                 }
 
+            matching_flagged = [
+                transaction
+                for transaction in flagged
+                if transaction.get("merchant", "").lower() in question.lower()
+            ]
+            detail_requested = any(
+                phrase in question.lower()
+                for phrase in ("why", "flagged")
+            )
+            explanation_transactions = (
+                matching_flagged
+                if len(matching_flagged) == 1
+                else flagged
+            )
+
             exact_result = (
-                "Potentially unusual transactions:\n"
-                + "\n".join(
-                    (
-                        f"{transaction['id']} — {transaction['merchant']} — "
-                        f"₹{transaction['amount']:.2f} — "
-                        f"Severity: {transaction['severity']} — "
-                        f"Risk score: {transaction['risk_score']} — "
-                        f"Signals: {', '.join(transaction['signals'])}"
-                    )
-                    for transaction in flagged
+                build_anomaly_fallback(
+                    explanation_transactions,
+                    detailed=detail_requested and len(explanation_transactions) == 1,
                 )
             )
 
@@ -1115,7 +1536,7 @@ class StatementSession:
                 "intent": intent,
                 "answer": answer_text,
                 "computed_total": None,
-                "transactions_used": flagged,
+                "transactions_used": explanation_transactions,
             }
 
         # --------------------------------------------------

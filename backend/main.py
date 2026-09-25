@@ -5,8 +5,8 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from backend import pdf_reader, transaction_parser, anomaly_engine
-from backend.rag import StatementSession
+from backend import pdf_reader, transaction_parser
+from backend.rag import StatementSession, generate_answer
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -63,6 +63,132 @@ def restore_latest_session():
 class AskRequest(BaseModel):
     question: str
     top_k: int = 3
+
+
+def detect_global_scope(question: str) -> str | None:
+    """Classify explicit vault/history questions before statement RAG."""
+    normalized = " ".join(question.lower().split())
+
+    global_markers = (
+        "overall",
+        "across statements",
+        "across all statements",
+        "across my statements",
+        "all statements",
+        "all uploaded statements",
+        "all stored statements",
+        "vault",
+        "stored statements",
+        "uploaded statements",
+        "transaction history",
+        "statement history",
+        "entire history",
+        "pdfs",
+        "pdf files",
+    )
+
+    if not any(marker in normalized for marker in global_markers):
+        return None
+
+    if "statement" in normalized or "pdf" in normalized:
+        if (
+            "transaction" not in normalized
+            and any(word in normalized for word in ("how many", "number of", "count"))
+        ):
+            return "global_statement_count"
+
+    if "transaction" in normalized and any(
+        word in normalized for word in ("how many", "number of", "count")
+    ):
+        return "global_transaction_count"
+
+    if "average" in normalized or "avg" in normalized:
+        return "global_average"
+
+    if any(
+        phrase in normalized
+        for phrase in (
+            "total spending",
+            "total spend",
+            "total amount",
+            "how much did i spend",
+            "how much have i spent",
+            "what did i spend",
+            "overall spending",
+        )
+    ):
+        return "global_total"
+
+    return "global_history"
+
+
+def build_global_history_summary() -> dict:
+    """Calculate exact aggregates across all MongoDB-stored transactions."""
+    amounts = [
+        float(transaction.get("amount", 0))
+        for transaction in transactions_collection.find(
+            {},
+            {"_id": 0, "amount": 1},
+        )
+    ]
+    total_spending = sum(amounts)
+
+    return {
+        "transaction_count": len(amounts),
+        "total_spending": round(total_spending, 2),
+        "average_transaction": round(
+            total_spending / len(amounts),
+            2,
+        ) if amounts else 0.0,
+        "statement_count": statements_collection.count_documents({}),
+    }
+
+
+def build_global_answer(question: str, scope: str) -> dict:
+    """Return an exact aggregate result without touching StatementSession."""
+    summary = build_global_history_summary()
+    computed_results = {"global_scope": "global_history"}
+
+    if scope == "global_statement_count":
+        count = summary["statement_count"]
+        computed_results["statement_count"] = count
+        exact_result = f"Statements stored in FinShield Vault: {count}"
+    elif scope == "global_transaction_count":
+        count = summary["transaction_count"]
+        computed_results["transaction_count"] = count
+        exact_result = f"Transactions across all stored statements: {count}"
+    elif scope == "global_average":
+        average = summary["average_transaction"]
+        computed_results["average_transaction"] = average
+        exact_result = (
+            "Average transaction across all stored statements: "
+            f"₹{average:.2f}"
+        )
+    elif scope == "global_total":
+        total = summary["total_spending"]
+        computed_results["total_spending"] = total
+        exact_result = f"Total spending across all stored statements: ₹{total:.2f}"
+    else:
+        computed_results.update(summary)
+        exact_result = (
+            f"FinShield Vault contains {summary['statement_count']} statements, "
+            f"{summary['transaction_count']} transactions, and total spending "
+            f"of ₹{summary['total_spending']:.2f}."
+        )
+
+    return {
+        "question": question,
+        "intent": scope,
+        "scope": "global_history",
+        "intents": [scope],
+        "answer": generate_answer(
+            question,
+            [],
+            exact_result=exact_result,
+        ),
+        "computed_results": computed_results,
+        "transactions_used": [],
+    }
 
 
 @app.get("/")
@@ -122,16 +248,11 @@ async def upload_statement(file: UploadFile = File(...)):
                 detail="No transactions could be extracted from the PDF."
             )
 
-        # 6. Run layered anomaly engine
-        annotated_transactions = anomaly_engine.evaluate_statement(
-            transactions
-        )
-
-        # 7. Create RAG session
-        #    Embeddings are created ONCE here.
+        # 6. Create RAG session and compute statement-scoped anomalies.
         current_session = StatementSession(transactions)
+        annotated_transactions = current_session.anomalies
 
-        # 8. Create a unique ID for this uploaded statement
+        # 7. Create a unique ID for this uploaded statement
         statement_id = str(uuid4())
         uploaded_at = datetime.now(timezone.utc)
 
@@ -180,44 +301,27 @@ async def upload_statement(file: UploadFile = File(...)):
 
 @app.post("/ask")
 async def ask_finshield(request: AskRequest):
-    if current_session is None:
-        restore_latest_session()
+    global_scope = detect_global_scope(request.question)
 
-    if current_session is None:
-        raise HTTPException(
-            status_code=400,
-            detail="No saved bank statement found. Please upload a statement."
-        )
-
-    try:
-        result = current_session.ask(
+    if global_scope is not None:
+        return build_global_answer(
             request.question,
-            top_k=request.top_k
+            global_scope,
         )
 
-        # Save the question and answer to MongoDB
-        question_document = {
-            "_id": str(uuid4()),
-            "statement_id": current_statement_id,
-            "question": request.question,
-            "top_k": request.top_k,
-            "intent": result.get("intent"),
-            "intents": result.get("intents", []),
-            "computed_results": result.get("computed_results", {}),
-            "answer": result.get("answer", ""),
-            "transactions_used": result.get("transactions_used", []),
-            "asked_at": datetime.now(timezone.utc),
-        }
+    if current_session is None:
+        restored = restore_latest_session()
 
-        questions_collection.insert_one(question_document)
+        if not restored or current_session is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Please upload a bank statement first.",
+            )
 
-        return result
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to answer question: {str(e)}"
-        )
+    return current_session.ask(
+        request.question,
+        top_k=request.top_k,
+    )
 
 
 def build_financial_overview(session: StatementSession) -> dict:
@@ -322,6 +426,60 @@ def _serialize_datetime(value):
     if isinstance(value, datetime):
         return value.isoformat()
     return value
+
+
+@app.get("/transactions")
+def list_all_transactions():
+    """Return the global transaction history with statement metadata."""
+    try:
+        statements = {
+            statement["_id"]: statement
+            for statement in statements_collection.find(
+                {},
+                {
+                    "_id": 1,
+                    "filename": 1,
+                    "uploaded_at": 1,
+                },
+            )
+        }
+
+        transactions = []
+        for transaction in transactions_collection.find({}, {"_id": 0}):
+            statement_id = transaction.get("statement_id")
+            statement = statements.get(statement_id, {})
+            transactions.append({
+                **transaction,
+                "statement_id": statement_id,
+                "filename": statement.get("filename"),
+                "uploaded_at": _serialize_datetime(
+                    statement.get("uploaded_at")
+                ),
+            })
+
+        return {
+            "count": len(transactions),
+            "transactions": transactions,
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load transaction history: {str(e)}",
+        )
+
+
+@app.get("/history-summary")
+def history_summary():
+    """Calculate aggregate metrics across every stored transaction."""
+    try:
+        return build_global_history_summary()
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to build transaction history summary: {str(e)}",
+        )
 
 
 @app.get("/files")
@@ -495,4 +653,4 @@ def get_statement_file(statement_id: str):
         raise HTTPException(
             status_code=500,
             detail=f"Failed to load statement: {str(e)}"
-        )    
+        )
